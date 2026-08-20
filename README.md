@@ -3,7 +3,7 @@ Daily hackathon digest log for automated email routine
 
 ## Routine spec
 
-- **Recipients:** consoleempty@gmail.com and shyguygamedev@gmail.com (all digest emails, including test sends)
+- **Recipients:** shyguygamedev@gmail.com only (all digest emails, including test sends)
 - **Selection:** pick one hackathon not already covered. Dedup is done by searching Gmail's sent folder for prior "Hackathon Digest: ..." subjects — NOT via `sent_log.md` (the routine's GitHub App has no repo write access, so it can't reliably commit/push a log; see note below)
 - **Email detail level** — each email must include, in this order:
   - Hackathon date(s) at the very top of the body, before anything else
