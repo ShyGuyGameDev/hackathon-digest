@@ -5,3 +5,4 @@ This file tracks every hackathon already emailed by the daily digest routine, so
 | Date Sent | Hackathon Name | URL |
 |---|---|---|
 | 2026-08-19 | IBM Bob 2.0 AI Hackathon | https://lablab.ai/ai-hackathons/ibm-bob-2-hackathon |
+| 2026-08-20 | RevenueCat Shipaton 2026 | https://revenuecat-shipaton-2026.devpost.com/ |
