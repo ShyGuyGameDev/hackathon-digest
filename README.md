@@ -1,9 +1,9 @@
 # hackathon-digest
-Hackathon digest log for automated email routine (sent daily)
+Hackathon digest log for automated email routine (sent weekly on Tuesdays)
 
 ## Routine spec
 
-- **Schedule:** daily
+- **Schedule:** weekly, every Tuesday
 - **Recipients:** consoleempty@gmail.com only (all digest emails, including test sends)
 - **Selection:** pick one hackathon not already covered. Dedup is done by searching Gmail's sent folder for prior "Hackathon Digest: ..." subjects — NOT via `sent_log.md` (the routine's GitHub App has no repo write access, so it can't reliably commit/push a log; see note below)
 - **Eligibility requirement:** the hackathon must explicitly allow high school students to participate. Skip any hackathon restricted to college/university students only (e.g. requires a college .edu email, "undergrad+" only, age 18+/enrolled-in-college-only rules). When eligibility isn't stated outright, check the official rules page before selecting.
