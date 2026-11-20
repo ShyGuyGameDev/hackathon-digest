@@ -104,3 +104,28 @@ test("filters round-trip through the URL and reject junk", () => {
   assert.equal(junk.from, "");
   assert.equal(filtersToParams(DEFAULT_FILTERS).toString(), "");
 });
+
+test("length in days rounds partial days up and filters by bucket", async () => {
+  const { eventLengthDays, lengthBucket } = await import("../src/shared/filters.ts");
+  const h = (n: number) => new Date(NOW.getTime() + n * 3_600_000).toISOString();
+  assert.equal(eventLengthDays({ startAt: h(0), endAt: h(4) }), 1); // 4-hour event
+  assert.equal(eventLengthDays({ startAt: h(0), endAt: h(27) }), 2); // Fri 5pm → Sat 8pm
+  assert.equal(eventLengthDays({ startAt: h(0), endAt: null }), null);
+  assert.equal(lengthBucket({ startAt: day(0), endAt: day(10) }), "1-4w");
+  assert.equal(lengthBucket({ startAt: day(0), endAt: day(55) }), "1m+");
+
+  // ai-online (1 day), robotics-sj (1 day), london-fin (1 day); add a long one and an unknown-length one.
+  const events = [
+    ...EVENTS,
+    make("month-long", { startAt: day(1), endAt: day(40), submissionDeadlineAt: day(40) }),
+    make("no-end", { startAt: day(2), endAt: null, submissionDeadlineAt: day(3) }),
+  ];
+  const run2 = (lengths: string[]) => applyFilters(events, { ...DEFAULT_FILTERS, lengths }, { now: NOW }).map((e) => e.id).sort();
+  assert.deepEqual(run2(["1m+"]), ["month-long"]);
+  assert.deepEqual(run2(["1d"]), ["ai-online", "london-fin", "robotics-sj"]);
+  assert.deepEqual(run2(["1d", "1m+"]), ["ai-online", "london-fin", "month-long", "robotics-sj"]);
+  assert.ok(!run2(["1d", "2-3d", "4-7d", "1-4w", "1m+"]).includes("no-end"), "unknown length is excluded when filtering");
+  assert.equal(computeFacets(events, DEFAULT_FILTERS, { now: NOW }).lengths.get("1d"), 3);
+  assert.deepEqual(paramsToFilters(new URLSearchParams("length=1d,bogus,1m%2B")).lengths, ["1d", "1m+"]);
+  assert.equal(filtersToParams({ ...DEFAULT_FILTERS, lengths: ["2-3d"] }).toString(), "length=2-3d");
+});

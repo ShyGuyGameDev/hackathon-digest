@@ -1,4 +1,5 @@
 import { DAY, listingState, localDayBoundary, msUntilDeadline } from "./dates.ts";
+import { LENGTHS } from "./taxonomy.ts";
 import type { Cost, EventSummary, Format, Perk } from "./types.ts";
 
 export type When = "any" | "week" | "month" | "quarter" | "custom";
@@ -13,6 +14,7 @@ export interface Filters {
   deadlineDays: number | null; // verified deadline within N days
   includeUnconfirmed: boolean;
   formats: Format[];
+  lengths: string[];
   regions: string[];
   countries: string[];
   states: string[];
@@ -37,6 +39,7 @@ export const DEFAULT_FILTERS: Filters = {
   deadlineDays: null,
   includeUnconfirmed: false,
   formats: [],
+  lengths: [],
   regions: [],
   countries: [],
   states: [],
@@ -81,7 +84,21 @@ export function matchesSearch(e: EventSummary, q: string): boolean {
   return tokens.every((t) => blob.includes(t));
 }
 
-type Group = "formats" | "regions" | "countries" | "states" | "cities" | "categories" | "perks" | "cost";
+/** Length in days from start to end, partial days rounded up (a 4-hour event is 1 day). Null if unknown. */
+export function eventLengthDays(e: Pick<EventSummary, "startAt" | "endAt">): number | null {
+  if (!e.startAt || !e.endAt) return null;
+  const ms = Date.parse(e.endAt) - Date.parse(e.startAt);
+  if (!(ms >= 0)) return null;
+  return Math.max(1, Math.ceil(ms / DAY));
+}
+
+export function lengthBucket(e: Pick<EventSummary, "startAt" | "endAt">): string | null {
+  const days = eventLengthDays(e);
+  if (days === null) return null;
+  return LENGTHS.find((l) => days >= l.min && days <= l.max)?.id ?? null;
+}
+
+type Group = "formats" | "lengths" | "regions" | "countries" | "states" | "cities" | "categories" | "perks" | "cost";
 
 /** Applies every filter except `skip` (used to compute facet counts for that group). */
 function passes(e: EventSummary, f: Filters, ctx: FilterContext, skip?: Group): boolean {
@@ -112,6 +129,10 @@ function passes(e: EventSummary, f: Filters, ctx: FilterContext, skip?: Group): 
   }
 
   if (skip !== "formats" && f.formats.length && !f.formats.includes(e.format)) return false;
+  if (skip !== "lengths" && f.lengths.length) {
+    const bucket = lengthBucket(e);
+    if (!bucket || !f.lengths.includes(bucket)) return false;
+  }
   if (skip !== "regions" && f.regions.length && !(e.region && f.regions.includes(e.region))) return false;
   if (skip !== "countries" && f.countries.length && !(e.countryCode && f.countries.includes(e.countryCode))) return false;
   if (skip !== "states" && f.states.length && !(e.state && f.states.includes(e.state))) return false;
@@ -174,6 +195,7 @@ export type Facets = Record<Group, Map<string, number>>;
 export function computeFacets(events: EventSummary[], f: Filters, ctx: FilterContext): Facets {
   const facets: Facets = {
     formats: new Map(),
+    lengths: new Map(),
     regions: new Map(),
     countries: new Map(),
     states: new Map(),
@@ -187,6 +209,7 @@ export function computeFacets(events: EventSummary[], f: Filters, ctx: FilterCon
   };
   for (const e of events) {
     if (passes(e, f, ctx, "formats")) bump(facets.formats, e.format);
+    if (passes(e, f, ctx, "lengths")) bump(facets.lengths, lengthBucket(e));
     if (passes(e, f, ctx, "regions")) bump(facets.regions, e.region);
     if (passes(e, f, ctx, "countries")) bump(facets.countries, e.countryCode);
     if (passes(e, f, ctx, "states")) bump(facets.states, e.state);
@@ -202,6 +225,7 @@ export function computeFacets(events: EventSummary[], f: Filters, ctx: FilterCon
 
 const LIST_KEYS = {
   formats: "format",
+  lengths: "length",
   regions: "region",
   countries: "country",
   states: "state",
@@ -261,6 +285,7 @@ export function paramsToFilters(p: URLSearchParams): Filters {
     deadlineDays: intParam(p, "closes", 1, 365),
     includeUnconfirmed: p.get("unconfirmed") === "1",
     formats: list("format").filter((x): x is Format => FORMAT_IDS.includes(x as Format)),
+    lengths: list("length").filter((x) => LENGTHS.some((l) => l.id === x)),
     regions: list("region"),
     countries: list("country").map((c) => c.toUpperCase()),
     states: list("state"),
@@ -283,7 +308,7 @@ export function activeFilterCount(f: Filters): number {
   if (f.when !== "any") n++;
   if (f.deadlineDays !== null) n++;
   if (f.includeUnconfirmed) n++;
-  n += f.formats.length + f.regions.length + f.countries.length + f.states.length + f.cities.length;
+  n += f.formats.length + f.lengths.length + f.regions.length + f.countries.length + f.states.length + f.cities.length;
   n += f.categories.length + f.perks.length + f.grades.length;
   if (f.cost) n++;
   if (f.age !== null) n++;

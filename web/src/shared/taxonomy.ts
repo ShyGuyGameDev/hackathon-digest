@@ -49,6 +49,15 @@ export const EDUCATION_LEVELS: { id: EducationLevel; label: string }[] = [
 
 export const GRADES = [9, 10, 11, 12];
 
+/** Event length buckets, by number of days from start to end (partial days round up). */
+export const LENGTHS: { id: string; label: string; min: number; max: number }[] = [
+  { id: "1d", label: "1 day", min: 1, max: 1 },
+  { id: "2-3d", label: "2–3 days", min: 2, max: 3 },
+  { id: "4-7d", label: "4–7 days", min: 4, max: 7 },
+  { id: "1-4w", label: "1–4 weeks", min: 8, max: 31 },
+  { id: "1m+", label: "Over a month", min: 32, max: Infinity },
+];
+
 export const REGIONS: { id: string; label: string }[] = [
   { id: "north_america", label: "North America" },
   { id: "latin_america", label: "Latin America & Caribbean" },

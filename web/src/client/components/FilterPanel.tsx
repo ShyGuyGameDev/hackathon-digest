@@ -1,6 +1,6 @@
 import { useId, useMemo, useState } from "react";
 import type { Facets, Filters, When } from "../../shared/filters.ts";
-import { CATEGORIES, COSTS, FORMATS, GRADES, PERKS, REGIONS, labelFor } from "../../shared/taxonomy.ts";
+import { CATEGORIES, COSTS, FORMATS, GRADES, LENGTHS, PERKS, REGIONS, labelFor } from "../../shared/taxonomy.ts";
 import type { EventSummary } from "../../shared/types.ts";
 
 export type SetFilters = (patch: Partial<Filters>) => void;
@@ -99,6 +99,7 @@ export function FilterPanel({ filters: f, setFilters, facets, available, events 
     intl: events.some((e) => e.internationalAllowed === true),
   }), [events]);
 
+  const lengths = facetOptions(LENGTHS.map((x) => x.id), facets.lengths, available.lengths, f.lengths, (id) => labelFor(LENGTHS, id));
   const formats = facetOptions(FORMATS.map((x) => x.id), facets.formats, available.formats, f.formats, (id) => labelFor(FORMATS, id));
   const regions = facetOptions(REGIONS.map((x) => x.id), facets.regions, available.regions, f.regions, (id) => labelFor(REGIONS, id));
   const countries = facetOptions([...available.countries.keys(), ...f.countries.filter((c) => !available.countries.has(c))], facets.countries, available.countries, f.countries, countryName).sort(byCount);
@@ -148,6 +149,12 @@ export function FilterPanel({ filters: f, setFilters, facets, available, events 
       <Group title="Format">
         <CheckList options={formats} selected={f.formats} onToggle={(id) => setFilters({ formats: toggle(f.formats, id as never) })} />
       </Group>
+
+      {lengths.length > 0 && (
+        <Group title="Length">
+          <CheckList options={lengths} selected={f.lengths} onToggle={(id) => setFilters({ lengths: toggle(f.lengths, id) })} />
+        </Group>
+      )}
 
       {(regions.length > 0 || countries.length > 0) && (
         <Group title="Location">

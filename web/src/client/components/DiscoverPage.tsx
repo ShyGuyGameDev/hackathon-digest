@@ -3,7 +3,7 @@ import {
   DEFAULT_FILTERS, activeFilterCount, applyFilters, computeFacets, countUnconfirmed, filtersToParams, paramsToFilters,
   type Filters, type Sort,
 } from "../../shared/filters.ts";
-import { CATEGORIES, COSTS, FORMATS, PERKS, REGIONS, labelFor } from "../../shared/taxonomy.ts";
+import { CATEGORIES, COSTS, FORMATS, LENGTHS, PERKS, REGIONS, labelFor } from "../../shared/taxonomy.ts";
 import type { EventsResponse } from "../../shared/types.ts";
 import { fetchEvents } from "../lib/api.ts";
 import { navigate, onLinkClick, useDocumentTitle } from "../lib/router.ts";
@@ -55,6 +55,7 @@ function chipsFor(f: Filters): Chip[] {
   if (f.deadlineDays !== null) chips.push({ key: "dl", label: `Closes within ${f.deadlineDays} days`, remove: { deadlineDays: null } });
   if (f.includeUnconfirmed) chips.push({ key: "unc", label: "Including unconfirmed deadlines", remove: { includeUnconfirmed: false } });
   for (const x of f.formats) chips.push({ key: `f-${x}`, label: labelFor(FORMATS, x), remove: { formats: f.formats.filter((v) => v !== x) } });
+  for (const x of f.lengths) chips.push({ key: `l-${x}`, label: `Length: ${labelFor(LENGTHS, x)}`, remove: { lengths: f.lengths.filter((v) => v !== x) } });
   for (const x of f.regions) chips.push({ key: `r-${x}`, label: labelFor(REGIONS, x), remove: { regions: f.regions.filter((v) => v !== x) } });
   for (const x of f.countries) chips.push({ key: `c-${x}`, label: countryName(x), remove: { countries: f.countries.filter((v) => v !== x) } });
   for (const x of f.states) chips.push({ key: `s-${x}`, label: x, remove: { states: f.states.filter((v) => v !== x) } });
