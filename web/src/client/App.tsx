@@ -2,6 +2,8 @@ import { Suspense, lazy, useCallback, useEffect, useState } from "react";
 import { AboutPage } from "./components/AboutPage.tsx";
 import { DiscoverPage } from "./components/DiscoverPage.tsx";
 import { SubmitPage } from "./components/SubmitPage.tsx";
+import { adminAvailable } from "./lib/api.ts";
+import { supabaseEnabled } from "./lib/supabase.ts";
 import { onLinkClick, useLocation } from "./lib/router.ts";
 import { useSaved } from "./lib/storage.ts";
 
@@ -32,6 +34,7 @@ export function App() {
   }, [toast]);
 
   useEffect(() => {
+    if (supabaseEnabled) return; // production: no Node server, nothing to ask
     fetch("/api/meta")
       .then((r) => r.json())
       .then((d: { mock?: boolean; staticSite?: boolean }) => {
@@ -46,11 +49,15 @@ export function App() {
 
   let page: React.ReactNode;
   if (isBrowse) page = <DiscoverPage path={path} search={search} onToast={showToast} />;
-  else if ((path === "/submit" || path === "/admin") && staticSite)
+  else if ((path === "/submit" && staticSite && !supabaseEnabled) || (path === "/admin" && (staticSite || !adminAvailable)))
     page = (
       <main id="main" className="narrow">
         <h1>{path === "/admin" ? "Admin" : "Suggest a hackathon"}</h1>
-        <p className="sub">This version of the site is a read-only snapshot, so {path === "/admin" ? "reviewing" : "online suggestions"} isn't available here yet.</p>
+        <p className="sub">
+          {path === "/admin"
+            ? "Reviewing happens in the Supabase dashboard (Table Editor → submissions, events, eligibility) on this deployment."
+            : "Online suggestions aren't available on this version of the site yet."}
+        </p>
         <a className="btn" href="/" onClick={(e) => onLinkClick(e, "/")}>Browse hackathons</a>
       </main>
     );
@@ -78,7 +85,7 @@ export function App() {
         <nav className="nav" aria-label="Main">
           <NavLink to="/" current={isBrowse && !savedView}>Browse</NavLink>
           <NavLink to="/?saved=1" current={savedView}>Saved<span className="count num">{saved.size || ""}</span></NavLink>
-          {!staticSite && <NavLink to="/submit" current={path === "/submit"} className="hide-sm">Suggest an event</NavLink>}
+          {(supabaseEnabled || !staticSite) && <NavLink to="/submit" current={path === "/submit"} className="hide-sm">Suggest an event</NavLink>}
           <NavLink to="/about" current={path === "/about"} className="hide-sm">How it works</NavLink>
         </nav>
       </header>
@@ -87,7 +94,7 @@ export function App() {
         <span>Hackathon Digest lists only events verified to accept high school students.</span>
         <span className="spacer" />
         <a href="/about" onClick={(e) => onLinkClick(e, "/about")}>How listings are verified</a>
-        {!staticSite && <a href="/submit" onClick={(e) => onLinkClick(e, "/submit")}>Suggest an event</a>}
+        {(supabaseEnabled || !staticSite) && <a href="/submit" onClick={(e) => onLinkClick(e, "/submit")}>Suggest an event</a>}
       </footer>
       {toast && <div className="toast" role="status">{toast}</div>}
     </>

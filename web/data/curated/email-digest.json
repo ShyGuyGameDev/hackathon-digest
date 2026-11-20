@@ -697,5 +697,51 @@
     "endAt": "2027-03-01T04:00:00Z",
     "format": "online",
     "cost": "free"
+  },
+  {
+    "externalId": "unihacks-youth-2027-01",
+    "name": "unihacks",
+    "organizer": "VidOpt LLC",
+    "summary": "A free online hackathon for ages 13–18: build tools for girls' education, climate adaptation, and air pollution and waste.",
+    "websiteUrl": "https://unihacks-youth.devpost.com/",
+    "registrationUrl": "https://unihacks-youth.devpost.com/",
+    "rulesUrl": "https://unihacks-youth.devpost.com/rules",
+    "startAt": "2026-11-15T05:00:00Z",
+    "endAt": "2027-01-25T22:00:00Z",
+    "timezone": "America/New_York",
+    "submissionDeadlineAt": "2027-01-25T22:00:00Z",
+    "submissionDeadlineVerified": true,
+    "submissionDeadlineSource": "https://unihacks-youth.devpost.com/",
+    "format": "online",
+    "categories": [
+      "education",
+      "climate",
+      "social_impact"
+    ],
+    "perks": [
+      "beginner_friendly"
+    ],
+    "eligibility": {
+      "status": "verified",
+      "highSchoolAllowed": true,
+      "educationLevels": [
+        "high_school"
+      ],
+      "minAge": 13,
+      "maxAge": 18,
+      "grades": [],
+      "geographicRestrictions": null,
+      "internationalAllowed": true,
+      "requiresCollegeEnrollment": false,
+      "evidence": [
+        {
+          "url": "https://unihacks-youth.devpost.com/",
+          "quote": "Submissions run November 15, 2026–January 25, 2027. The submission deadline is January 25 at 5:00 p.m. Eastern (4:00 p.m. Central). Judging is planned for January 25–30, 2027. Students ages 13–18 are eligible."
+        }
+      ],
+      "sourceUrl": "https://unihacks-youth.devpost.com/",
+      "checkedAt": "2026-11-20T04:00:00Z",
+      "notes": null
+    }
   }
 ]

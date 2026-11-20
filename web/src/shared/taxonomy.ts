@@ -80,6 +80,14 @@ for (const [region, codes] of Object.entries(REGION_CODES)) {
   for (const code of codes.split(" ")) COUNTRY_TO_REGION.set(code, region);
 }
 
+/** Human-readable names for record origins (event_sources.source). */
+export const SOURCE_LABELS: Record<string, string> = {
+  curated: "Reviewer-curated events",
+  hackclub: "Hack Club Hackathons directory",
+  submission: "Organizer submission (reviewed)",
+  digest: "Featured in the Hackathon Digest email",
+};
+
 export function regionForCountry(countryCode: string | null | undefined): string | null {
   if (!countryCode) return null;
   return COUNTRY_TO_REGION.get(countryCode.toUpperCase()) ?? null;

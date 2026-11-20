@@ -1,4 +1,5 @@
 import type { EventDetail, EventsResponse } from "../../shared/types.ts";
+import { fetchEventFromSupabase, fetchEventsFromSupabase, submitToSupabase, supabaseEnabled } from "./supabase.ts";
 
 export class ApiError extends Error {
   status: number;
@@ -15,10 +16,22 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return body as T;
 }
 
-export const fetchEvents = () => request<EventsResponse>("/api/events");
-export const fetchEvent = (slug: string) => request<{ event: EventDetail; mock: boolean }>(`/api/events/${encodeURIComponent(slug)}`);
+// With Supabase configured (production on Vercel) the browser reads the database directly;
+// otherwise it talks to the local Node server (development, self-hosting).
+export const fetchEvents = () => (supabaseEnabled ? fetchEventsFromSupabase() : request<EventsResponse>("/api/events"));
+export const fetchEvent = (slug: string) =>
+  supabaseEnabled
+    ? fetchEventFromSupabase(slug).catch((err: Error & { status?: number }) => {
+        throw new ApiError(err.status ?? 500, err.message);
+      })
+    : request<{ event: EventDetail; mock: boolean }>(`/api/events/${encodeURIComponent(slug)}`);
 export const submitEvent = (payload: Record<string, unknown>) =>
-  request<{ ok: true }>("/api/submissions", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(payload) });
+  supabaseEnabled
+    ? submitToSupabase(payload)
+    : request<{ ok: true }>("/api/submissions", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(payload) });
+
+/** The admin dashboard needs the Node server; it isn't available on the Supabase deployment. */
+export const adminAvailable = !supabaseEnabled;
 
 export function adminRequest<T>(token: string, path: string, method = "GET", body?: unknown): Promise<T> {
   return request<T>(`/api/admin${path}`, {
