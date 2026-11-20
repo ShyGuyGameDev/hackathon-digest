@@ -16,6 +16,7 @@ export const SOURCE_PRIORITIES: Record<string, number> = {
   ...Object.fromEntries(SOURCES.map((s) => [s.id, s.priority])),
   submission: 80, // organizer submissions, written when a reviewer approves them
   digest: 60, // hackathons recorded by the weekly email routine
+  research: 55, // hackathons found by the daily research routine
 };
 
 export { SOURCE_LABELS } from "../../shared/taxonomy.ts";

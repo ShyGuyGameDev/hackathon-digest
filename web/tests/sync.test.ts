@@ -28,7 +28,7 @@ function fakeSupabase(tables: Record<string, Record<string, unknown>[]>): Supaba
     tables,
     async select(table, query) {
       let rows = tables[table] ?? [];
-      if (table === "submissions") rows = rows.filter((r) => r.status === "pending" && (r.payload as { source?: string })?.source === "email-digest");
+      if (table === "submissions") rows = rows.filter((r) => r.status === "pending" && ["email-digest", "daily-research", "deadline-update"].includes(String((r.payload as { source?: string })?.source)));
       if (query.includes("order=") && /limit=1$/.test(query)) rows = rows.slice(-1);
       return structuredClone(rows);
     },
@@ -47,6 +47,11 @@ function fakeSupabase(tables: Record<string, Record<string, unknown>[]>): Supaba
       const id = Number(/id=eq\.(\d+)/.exec(filter)?.[1]);
       for (const r of tables[table] ?? []) if (r.id === id) Object.assign(r, patch);
     },
+    async remove(table, filter) {
+      const ids = new Set((/id=in\.\(([^)]*)\)/.exec(filter)?.[1] ?? "").split(","));
+      tables[table] = (tables[table] ?? []).filter((r) => !ids.has(String(r.id)));
+      if (table === "events") for (const t of ["eligibility", "event_sources", "event_overrides"]) tables[t] = (tables[t] ?? []).filter((r) => !ids.has(String(r.event_id)));
+    },
   };
 }
 
@@ -54,6 +59,8 @@ const PAGES: Record<string, string> = {
   "https://alpha.example/": "<p>Alpha is a hackathon for high school students.</p>",
   "https://newhack.example/": "<p>NewHack is open to all high schoolers worldwide.</p>",
   "https://vague.example/": "<p>A weekend of building.</p>",
+  "https://slow.example/": "<p>Slow Hacks is for high school students.</p><p>Submissions are due January 12, 2027 at 11:59 PM PT.</p>",
+  "https://past.example/": "<p>Past Hacks welcomes high school students.</p>",
 };
 const offlineFetch = (async (input: string | URL | Request) => {
   const url = String(input instanceof Request ? input.url : input);
@@ -113,11 +120,47 @@ test("sync loads Supabase rows, ingests digest submissions, and writes everythin
   assert.equal(subs.find((s) => s.id === 1)!.status, "approved");
   assert.match(String(subs.find((s) => s.id === 2)!.review_note), /unpublished until reviewed/);
   assert.equal(subs.find((s) => s.id === 3)!.status, "pending", "organizer submissions are left for review");
-  assert.equal(result.digestProcessed.length, 2);
+  assert.equal(result.queued.length, 2);
   assert.equal(sb.tables.ingestion_runs!.length, 1);
 
   // Running again is idempotent.
   await syncSupabase(sb, schemaSql, { now: NOW, fetchImpl: offlineFetch });
   assert.equal(sb.tables.events!.length, 3);
   assert.equal(sb.tables.event_sources!.length, 3);
+});
+
+test("sync applies verified deadline updates and removes events whose deadline has passed", async () => {
+  const sb = fakeSupabase({ events: [], eligibility: [], event_sources: [], event_overrides: [], ingestion_runs: [], submissions: [
+    { id: 10, status: "pending", payload: { source: "daily-research", name: "Slow Hacks", websiteUrl: "https://slow.example/", startAt: day(50), endAt: day(53), format: "online" } },
+    { id: 11, status: "pending", payload: { source: "daily-research", name: "Past Hacks", websiteUrl: "https://past.example/", startAt: day(-5), endAt: day(-3), format: "online" } },
+  ] });
+  // Day 1: both queued events are processed; the one that already ended is never kept.
+  const first = await syncSupabase(sb, schemaSql, { now: NOW, fetchImpl: offlineFetch });
+  assert.deepEqual(sb.tables.events!.map((e) => e.name), ["Slow Hacks"]);
+  assert.equal(first.removed.length, 1);
+  assert.equal(sb.tables.submissions!.find((s) => s.id === 11)!.status, "rejected");
+  const slow = sb.tables.events![0]!;
+  assert.equal(slow.submission_deadline_status, "unverified");
+
+  // Day 2: research reports deadlines. A quote that's on the page is applied; a made-up one isn't.
+  sb.tables.submissions!.push(
+    { id: 12, status: "pending", payload: { source: "deadline-update", slug: slow.slug, submissionDeadlineAt: "2027-01-13T07:59:00Z", sourceUrl: "https://slow.example/", quote: "Submissions are due January 12, 2027 at 11:59 PM PT." } },
+    { id: 13, status: "pending", payload: { source: "deadline-update", slug: slow.slug, submissionDeadlineAt: "2027-01-01T00:00:00Z", sourceUrl: "https://slow.example/", quote: "Deadline: January 1, 2027" } },
+  );
+  const second = await syncSupabase(sb, schemaSql, { now: NOW, fetchImpl: offlineFetch });
+  const applied = second.deadlines.filter((d) => d.applied);
+  assert.equal(applied.length, 1);
+  assert.match(second.deadlines.find((d) => !d.applied)!.reason, /doesn't appear/);
+  const updated = sb.tables.events!.find((e) => e.name === "Slow Hacks")!;
+  assert.equal(updated.submission_deadline_status, "verified");
+  assert.equal(new Date(String(updated.submission_deadline_at)).toISOString(), "2027-01-13T07:59:00.000Z");
+  assert.equal(sb.tables.event_overrides!.length, 3, "the deadline is stored as overrides so re-ingestion keeps it");
+
+  // Later: once that deadline passes, the event is deleted from Supabase entirely.
+  const after = new Date("2027-01-14T00:00:00Z");
+  const third = await syncSupabase(sb, schemaSql, { now: after, fetchImpl: offlineFetch });
+  assert.equal(third.removed.length, 1);
+  assert.equal(sb.tables.events!.length, 0);
+  assert.equal(sb.tables.event_overrides!.length, 0);
+  assert.equal(sb.tables.eligibility!.length, 0);
 });

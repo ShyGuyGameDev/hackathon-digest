@@ -1,33 +1,39 @@
 # hackathon-digest
-Hackathon digest log for automated email routine (sent weekly on Tuesdays)
+Daily routine that finds hackathons open to high school students and adds them to the website's Supabase database. It no longer sends email.
 
 ## Routine spec
 
-- **Schedule:** weekly, every Tuesday
-- **Recipients:** consoleempty@gmail.com only (all digest emails, including test sends)
-- **Selection:** pick one hackathon not already covered. Dedup is done by searching Gmail's sent folder for prior "Hackathon Digest: ..." subjects — NOT via `sent_log.md` (the routine's GitHub App has no repo write access, so it can't reliably commit/push a log; see note below)
-- **Eligibility requirement:** the hackathon must explicitly allow high school students to participate. Skip any hackathon restricted to college/university students only (e.g. requires a college .edu email, "undergrad+" only, age 18+/enrolled-in-college-only rules). When eligibility isn't stated outright, check the official rules page before selecting.
-- **Location requirement:** the hackathon must be either fully online/virtual, or in-person somewhere in the Bay Area (San Francisco Bay Area, California). Skip in-person hackathons that are far from the Bay Area (e.g. across the country or internationally) unless they are hybrid with a genuine online participation track.
-- **Email detail level** — each email must include, in this order:
-  - Hackathon date(s) at the very top of the body, before anything else
-  - What the featured tool/platform/theme actually is (plain-language explainer, not just the name)
-  - What's required to build/submit (theme, mandatory requirements, deliverables)
-  - Judging/evaluation criteria
-  - Format, prize pool
-  - Source links
-- `sent_log.md` below is a manual historical record only, not read or written by the automated routine.
-- **Site update (after the email is sent, best effort):** record the emailed hackathon in the website's Supabase database. This step never blocks or changes the email: if it fails, report the error and stop. No git commit or push.
-  1. Run this once, filling in the values (ISO-8601 UTC times, e.g. `2027-02-27T02:00:00Z`; `format` is `online`, `in_person` or `hybrid`; include `city`, `state`, `country`, `countryCode` only for in-person events; leave out any field you don't know):
-     ```sh
-     curl -sS -X POST "https://rwvykhgkhytsagbmqylr.supabase.co/rest/v1/submissions" \
-       -H "apikey: sb_publishable_6zoFaKhOLGOHDcNqdZWsvA_Xfe5voKM" \
-       -H "Content-Type: application/json" -H "Prefer: return=minimal" -w "HTTP %{http_code}\n" \
-       -d '{"payload": {"source": "email-digest", "name": "...", "organizer": "...", "websiteUrl": "https://...", "registrationUrl": "https://...", "rulesUrl": "https://...", "startAt": "...", "endAt": "...", "format": "online"}}'
-     ```
-  2. `HTTP 201` means it was recorded. The website's daily job checks the event against its official site and publishes it only if high school eligibility is confirmed there. (The key above is the public, insert-only publishable key.)
+- **Schedule:** daily.
+- **Output:** rows in the website's Supabase `submissions` queue. Never send email, and never commit, push or edit files in this repo.
+- **Scope:** hackathons anywhere in the world (online, in person or hybrid) that explicitly allow high school students. Skip events restricted to college/university students (e.g. a college .edu email, "undergrad+" only, 18+ or enrolled-in-college rules). When eligibility isn't stated outright, check the official rules before adding.
+- **Supabase access (public, insert-only key; already scoped by row-level security):**
+  - URL: `https://rwvykhgkhytsagbmqylr.supabase.co/rest/v1`
+  - Key header: `apikey: sb_publishable_6zoFaKhOLGOHDcNqdZWsvA_Xfe5voKM`
+- **Step 1 – see what's already listed:**
+  ```sh
+  curl -sS "https://rwvykhgkhytsagbmqylr.supabase.co/rest/v1/public_events?select=slug,name,website_url,start_at,end_at,submission_deadline_status&limit=5000" \
+    -H "apikey: sb_publishable_6zoFaKhOLGOHDcNqdZWsvA_Xfe5voKM"
+  ```
+- **Step 2 – add new hackathons:** find up to 5 hackathons that are upcoming or open, meet the scope above, and are NOT already listed (compare names and website domains). For each, send one request:
+  ```sh
+  curl -sS -X POST "https://rwvykhgkhytsagbmqylr.supabase.co/rest/v1/submissions" \
+    -H "apikey: sb_publishable_6zoFaKhOLGOHDcNqdZWsvA_Xfe5voKM" -H "Content-Type: application/json" -H "Prefer: return=minimal" -w "HTTP %{http_code}\n" \
+    -d '{"payload": {"source": "daily-research", "name": "...", "organizer": "...", "websiteUrl": "https://...", "registrationUrl": "https://...", "rulesUrl": "https://...", "startAt": "2027-02-27T02:00:00Z", "endAt": "2027-03-01T04:00:00Z", "format": "online"}}'
+  ```
+  Times are ISO-8601 UTC. `format` is `online`, `in_person` or `hybrid`; add `city`, `state`, `country`, `countryCode` for in-person/hybrid events. Leave out any field you don't know; never guess.
+- **Step 3 – look for newly posted deadlines:** for every listed event whose `submission_deadline_status` is `unverified`, check its official site/rules for a submission deadline. If one is posted, send:
+  ```sh
+  curl -sS -X POST "https://rwvykhgkhytsagbmqylr.supabase.co/rest/v1/submissions" \
+    -H "apikey: sb_publishable_6zoFaKhOLGOHDcNqdZWsvA_Xfe5voKM" -H "Content-Type: application/json" -H "Prefer: return=minimal" -w "HTTP %{http_code}\n" \
+    -d '{"payload": {"source": "deadline-update", "slug": "<slug from step 1>", "submissionDeadlineAt": "2027-01-13T07:59:00Z", "sourceUrl": "https://<official page that states it>", "quote": "<the exact sentence from that page that states the deadline>"}}'
+  ```
+  The quote must be copied word for word from the page at `sourceUrl`: the website re-fetches that page and rejects the update if the quote isn't there. If no deadline is posted, send nothing.
+- **What happens next (automatic, not the routine's job):** the website's daily job (15:00 UTC) checks each new hackathon against its official site and publishes it only if high school eligibility is confirmed there, applies deadlines whose quotes it can verify, and deletes events whose deadline has passed.
+- **Report:** end with the hackathons added (name, URL, HTTP status), the deadline updates sent (event, date, source, HTTP status), and any failures. If a request fails, report the status and response; don't retry with other methods.
+- `sent_log.md` is a manual historical record of past emails only; don't read or write it.
 
 ### Known limitation
-The Claude GitHub App for this repo is authorization-only (shows under GitHub's "Authorized GitHub Apps", not "Installed GitHub Apps") — there is no install/configure step available to grant it repo write access, so cloud routine runs cannot push commits. Dedup was moved to Gmail sent-history search to route around this entirely.
+The Claude GitHub App for this repo is authorization-only, so cloud routine runs cannot push commits. That's why the routine writes to Supabase instead of the repo. The routine's cloud environment must allow network access to `rwvykhgkhytsagbmqylr.supabase.co`.
 
-## Website (separate product, not part of the email routine)
-`web/` contains a hackathon discovery website. Everything above this heading is the email routine's spec, and nothing in `web/` changes it: the routine's recipient, schedule, Gmail deduplication and online-or-Bay-Area location requirement all stay exactly as written above. The website's worldwide scope applies to the website only. See `web/README.md`.
+## Website
+`web/` contains the hackathon discovery website the routine feeds (https://hackathondigest.vercel.app). See `web/README.md`.

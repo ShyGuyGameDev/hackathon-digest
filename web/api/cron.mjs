@@ -4,6 +4,160 @@ var init_default = "-- Core schema. Written in portable SQL (SQLite dialect, no 
 // src/functions/sync.ts
 import { DatabaseSync as DatabaseSync2 } from "node:sqlite";
 
+// src/shared/dates.ts
+var HOUR = 36e5;
+var DAY = 24 * HOUR;
+function listingState(e, now) {
+  if (e.submissionDeadlineStatus === "verified" && e.submissionDeadlineAt) {
+    return Date.parse(e.submissionDeadlineAt) > now.getTime() ? "open" : "closed";
+  }
+  const ref = e.endAt ?? e.startAt;
+  if (!ref) return "closed";
+  return Date.parse(ref) > now.getTime() ? "unconfirmed" : "closed";
+}
+function isValidInstant(value) {
+  return typeof value === "string" && /^\d{4}-\d{2}-\d{2}T/.test(value) && !Number.isNaN(Date.parse(value));
+}
+
+// src/ingest/fetchPage.ts
+import { createHash } from "node:crypto";
+var USER_AGENT = `HackathonDigestBot/0.1 (+${process.env.PUBLIC_ORIGIN ?? "http://localhost:8787"}/about)`;
+var TIMEOUT_MS = 12e3;
+var MAX_BYTES = 15e5;
+var robotsCache = /* @__PURE__ */ new Map();
+async function disallowRules(origin, fetchImpl) {
+  let p = robotsCache.get(origin);
+  if (!p) {
+    p = (async () => {
+      try {
+        const res = await fetchImpl(`${origin}/robots.txt`, {
+          headers: { "user-agent": USER_AGENT },
+          signal: AbortSignal.timeout(TIMEOUT_MS)
+        });
+        if (!res.ok) return [];
+        const body = await res.text();
+        if (/<html/i.test(body.slice(0, 200))) return [];
+        return parseRobots(body);
+      } catch {
+        return [];
+      }
+    })();
+    robotsCache.set(origin, p);
+  }
+  return p;
+}
+function parseRobots(body, agent = "hackathondigestbot") {
+  const groups = [];
+  let current = null;
+  let lastWasAgent = false;
+  for (const line of body.split(/\r?\n/)) {
+    const m = /^\s*([a-z-]+)\s*:\s*(.*?)\s*(?:#.*)?$/i.exec(line);
+    if (!m) continue;
+    const key = m[1].toLowerCase();
+    const value = m[2];
+    if (key === "user-agent") {
+      if (!current || !lastWasAgent) groups.push(current = { agents: [], disallow: [] });
+      current.agents.push(value.toLowerCase());
+      lastWasAgent = true;
+    } else {
+      lastWasAgent = false;
+      if (key === "disallow" && current && value) current.disallow.push(value);
+    }
+  }
+  const specific = groups.filter((g) => g.agents.some((a) => a !== "*" && agent.includes(a)));
+  const chosen = specific.length ? specific : groups.filter((g) => g.agents.includes("*"));
+  return chosen.flatMap((g) => g.disallow);
+}
+function robotsAllows(rules, path) {
+  return !rules.some((rule) => {
+    const pattern = rule.replace(/[.+?^${}()|[\]\\]/g, "\\$&").replace(/\*/g, ".*");
+    return new RegExp(`^${pattern.endsWith("\\$") ? pattern.slice(0, -2) + "$" : pattern}`).test(path);
+  });
+}
+var ENTITIES = { amp: "&", lt: "<", gt: ">", quot: '"', apos: "'", nbsp: " ", rsquo: "\u2019", lsquo: "\u2018", ldquo: "\u201C", rdquo: "\u201D", ndash: "\u2013", mdash: "\u2014", hellip: "\u2026" };
+function decodeEntities(s) {
+  return s.replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);/gi, (whole, code) => {
+    if (code[0] === "#") {
+      const n = code[1]?.toLowerCase() === "x" ? parseInt(code.slice(2), 16) : parseInt(code.slice(1), 10);
+      return Number.isFinite(n) ? String.fromCodePoint(n) : whole;
+    }
+    return ENTITIES[code.toLowerCase()] ?? whole;
+  });
+}
+function extractText(html) {
+  return decodeEntities(
+    html.replace(/<!--[\s\S]*?-->/g, " ").replace(/<(script|style|noscript|svg|template)\b[\s\S]*?<\/\1>/gi, " ").replace(/<(br|p|div|li|h[1-6]|tr|section|article)\b[^>]*>/gi, "\n").replace(/<[^>]+>/g, " ")
+  ).replace(/[ \t\f\v ]+/g, " ").replace(/\s*\n\s*/g, "\n").trim();
+}
+function metaContent(html, name) {
+  const re = new RegExp(`<meta[^>]+(?:name|property)=["']${name}["'][^>]*>`, "i");
+  const tag = re.exec(html)?.[0];
+  const content = tag && /content=["']([^"']*)["']/i.exec(tag)?.[1];
+  return content ? decodeEntities(content).trim() || null : null;
+}
+function extractLinks(html, base) {
+  const out = [];
+  for (const m of html.matchAll(/<a\b[^>]*href=["']([^"'#]+)["'][^>]*>([\s\S]*?)<\/a>/gi)) {
+    try {
+      out.push({ href: new URL(m[1], base).toString(), text: extractText(m[2]).slice(0, 80) });
+    } catch {
+    }
+  }
+  return out;
+}
+function hashText(text) {
+  return createHash("sha256").update(text.replace(/\d+/g, "#")).digest("hex").slice(0, 32);
+}
+async function fetchPage(url, fetchImpl = fetch) {
+  const empty = {
+    url,
+    finalUrl: null,
+    ok: false,
+    statusCode: null,
+    robotsAllowed: true,
+    text: "",
+    metaDescription: null,
+    links: [],
+    contentHash: null,
+    error: null
+  };
+  let parsed;
+  try {
+    parsed = new URL(url);
+  } catch {
+    return { ...empty, error: "invalid URL" };
+  }
+  const rules = await disallowRules(parsed.origin, fetchImpl);
+  if (!robotsAllows(rules, parsed.pathname || "/")) return { ...empty, robotsAllowed: false, error: "disallowed by robots.txt" };
+  try {
+    const res = await fetchImpl(url, {
+      redirect: "follow",
+      headers: { "user-agent": USER_AGENT, accept: "text/html,application/xhtml+xml" },
+      signal: AbortSignal.timeout(TIMEOUT_MS)
+    });
+    const type = res.headers.get("content-type") ?? "";
+    if (!res.ok) return { ...empty, finalUrl: res.url || null, statusCode: res.status, error: `HTTP ${res.status}` };
+    if (!/html|text/i.test(type)) return { ...empty, finalUrl: res.url || null, statusCode: res.status, ok: true, error: `non-HTML content (${type})` };
+    const buf = Buffer.from(await res.arrayBuffer()).subarray(0, MAX_BYTES);
+    const html = buf.toString("utf8");
+    const text = extractText(html);
+    return {
+      url,
+      finalUrl: res.url || url,
+      ok: true,
+      statusCode: res.status,
+      robotsAllowed: true,
+      text,
+      metaDescription: metaContent(html, "description") ?? metaContent(html, "og:description"),
+      links: extractLinks(html, res.url || url),
+      contentHash: hashText(text),
+      error: null
+    };
+  } catch (err) {
+    return { ...empty, error: err instanceof Error ? err.message : String(err) };
+  }
+}
+
 // src/server/db.ts
 import { DatabaseSync } from "node:sqlite";
 import { dirname, join, resolve } from "node:path";
@@ -20,21 +174,6 @@ function transaction(db, fn) {
     db.exec("ROLLBACK");
     throw err;
   }
-}
-
-// src/shared/dates.ts
-var HOUR = 36e5;
-var DAY = 24 * HOUR;
-function listingState(e, now) {
-  if (e.submissionDeadlineStatus === "verified" && e.submissionDeadlineAt) {
-    return Date.parse(e.submissionDeadlineAt) > now.getTime() ? "open" : "closed";
-  }
-  const ref = e.endAt ?? e.startAt;
-  if (!ref) return "closed";
-  return Date.parse(ref) > now.getTime() ? "unconfirmed" : "closed";
-}
-function isValidInstant(value) {
-  return typeof value === "string" && /^\d{4}-\d{2}-\d{2}T/.test(value) && !Number.isNaN(Date.parse(value));
 }
 
 // src/ingest/eligibility.ts
@@ -182,145 +321,6 @@ function decideEligibility(claim, page, existing, now) {
     manual: false,
     contentHash: hash
   };
-}
-
-// src/ingest/fetchPage.ts
-import { createHash } from "node:crypto";
-var USER_AGENT = `HackathonDigestBot/0.1 (+${process.env.PUBLIC_ORIGIN ?? "http://localhost:8787"}/about)`;
-var TIMEOUT_MS = 12e3;
-var MAX_BYTES = 15e5;
-var robotsCache = /* @__PURE__ */ new Map();
-async function disallowRules(origin, fetchImpl) {
-  let p = robotsCache.get(origin);
-  if (!p) {
-    p = (async () => {
-      try {
-        const res = await fetchImpl(`${origin}/robots.txt`, {
-          headers: { "user-agent": USER_AGENT },
-          signal: AbortSignal.timeout(TIMEOUT_MS)
-        });
-        if (!res.ok) return [];
-        const body = await res.text();
-        if (/<html/i.test(body.slice(0, 200))) return [];
-        return parseRobots(body);
-      } catch {
-        return [];
-      }
-    })();
-    robotsCache.set(origin, p);
-  }
-  return p;
-}
-function parseRobots(body, agent = "hackathondigestbot") {
-  const groups = [];
-  let current = null;
-  let lastWasAgent = false;
-  for (const line of body.split(/\r?\n/)) {
-    const m = /^\s*([a-z-]+)\s*:\s*(.*?)\s*(?:#.*)?$/i.exec(line);
-    if (!m) continue;
-    const key = m[1].toLowerCase();
-    const value = m[2];
-    if (key === "user-agent") {
-      if (!current || !lastWasAgent) groups.push(current = { agents: [], disallow: [] });
-      current.agents.push(value.toLowerCase());
-      lastWasAgent = true;
-    } else {
-      lastWasAgent = false;
-      if (key === "disallow" && current && value) current.disallow.push(value);
-    }
-  }
-  const specific = groups.filter((g) => g.agents.some((a) => a !== "*" && agent.includes(a)));
-  const chosen = specific.length ? specific : groups.filter((g) => g.agents.includes("*"));
-  return chosen.flatMap((g) => g.disallow);
-}
-function robotsAllows(rules, path) {
-  return !rules.some((rule) => {
-    const pattern = rule.replace(/[.+?^${}()|[\]\\]/g, "\\$&").replace(/\*/g, ".*");
-    return new RegExp(`^${pattern.endsWith("\\$") ? pattern.slice(0, -2) + "$" : pattern}`).test(path);
-  });
-}
-var ENTITIES = { amp: "&", lt: "<", gt: ">", quot: '"', apos: "'", nbsp: " ", rsquo: "\u2019", lsquo: "\u2018", ldquo: "\u201C", rdquo: "\u201D", ndash: "\u2013", mdash: "\u2014", hellip: "\u2026" };
-function decodeEntities(s) {
-  return s.replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);/gi, (whole, code) => {
-    if (code[0] === "#") {
-      const n = code[1]?.toLowerCase() === "x" ? parseInt(code.slice(2), 16) : parseInt(code.slice(1), 10);
-      return Number.isFinite(n) ? String.fromCodePoint(n) : whole;
-    }
-    return ENTITIES[code.toLowerCase()] ?? whole;
-  });
-}
-function extractText(html) {
-  return decodeEntities(
-    html.replace(/<!--[\s\S]*?-->/g, " ").replace(/<(script|style|noscript|svg|template)\b[\s\S]*?<\/\1>/gi, " ").replace(/<(br|p|div|li|h[1-6]|tr|section|article)\b[^>]*>/gi, "\n").replace(/<[^>]+>/g, " ")
-  ).replace(/[ \t\f\v ]+/g, " ").replace(/\s*\n\s*/g, "\n").trim();
-}
-function metaContent(html, name) {
-  const re = new RegExp(`<meta[^>]+(?:name|property)=["']${name}["'][^>]*>`, "i");
-  const tag = re.exec(html)?.[0];
-  const content = tag && /content=["']([^"']*)["']/i.exec(tag)?.[1];
-  return content ? decodeEntities(content).trim() || null : null;
-}
-function extractLinks(html, base) {
-  const out = [];
-  for (const m of html.matchAll(/<a\b[^>]*href=["']([^"'#]+)["'][^>]*>([\s\S]*?)<\/a>/gi)) {
-    try {
-      out.push({ href: new URL(m[1], base).toString(), text: extractText(m[2]).slice(0, 80) });
-    } catch {
-    }
-  }
-  return out;
-}
-function hashText(text) {
-  return createHash("sha256").update(text.replace(/\d+/g, "#")).digest("hex").slice(0, 32);
-}
-async function fetchPage(url, fetchImpl = fetch) {
-  const empty = {
-    url,
-    finalUrl: null,
-    ok: false,
-    statusCode: null,
-    robotsAllowed: true,
-    text: "",
-    metaDescription: null,
-    links: [],
-    contentHash: null,
-    error: null
-  };
-  let parsed;
-  try {
-    parsed = new URL(url);
-  } catch {
-    return { ...empty, error: "invalid URL" };
-  }
-  const rules = await disallowRules(parsed.origin, fetchImpl);
-  if (!robotsAllows(rules, parsed.pathname || "/")) return { ...empty, robotsAllowed: false, error: "disallowed by robots.txt" };
-  try {
-    const res = await fetchImpl(url, {
-      redirect: "follow",
-      headers: { "user-agent": USER_AGENT, accept: "text/html,application/xhtml+xml" },
-      signal: AbortSignal.timeout(TIMEOUT_MS)
-    });
-    const type = res.headers.get("content-type") ?? "";
-    if (!res.ok) return { ...empty, finalUrl: res.url || null, statusCode: res.status, error: `HTTP ${res.status}` };
-    if (!/html|text/i.test(type)) return { ...empty, finalUrl: res.url || null, statusCode: res.status, ok: true, error: `non-HTML content (${type})` };
-    const buf = Buffer.from(await res.arrayBuffer()).subarray(0, MAX_BYTES);
-    const html = buf.toString("utf8");
-    const text = extractText(html);
-    return {
-      url,
-      finalUrl: res.url || url,
-      ok: true,
-      statusCode: res.status,
-      robotsAllowed: true,
-      text,
-      metaDescription: metaContent(html, "description") ?? metaContent(html, "og:description"),
-      links: extractLinks(html, res.url || url),
-      contentHash: hashText(text),
-      error: null
-    };
-  } catch (err) {
-    return { ...empty, error: err instanceof Error ? err.message : String(err) };
-  }
 }
 
 // src/shared/taxonomy.ts
@@ -1051,8 +1051,10 @@ var SOURCE_PRIORITIES = {
   ...Object.fromEntries(SOURCES.map((s) => [s.id, s.priority])),
   submission: 80,
   // organizer submissions, written when a reviewer approves them
-  digest: 60
+  digest: 60,
   // hackathons recorded by the weekly email routine
+  research: 55
+  // hackathons found by the daily research routine
 };
 
 // src/functions/sync.ts
@@ -1082,6 +1084,9 @@ function supabaseAdmin(url, secretKey, fetchImpl = fetch) {
     },
     async update(table, filter, patch) {
       await call(`${table}?${filter}`, { method: "PATCH", headers: { Prefer: "return=minimal" }, body: JSON.stringify(patch) });
+    },
+    async remove(table, filter) {
+      await call(`${table}?${filter}`, { method: "DELETE", headers: { Prefer: "return=minimal" } });
     }
   };
 }
@@ -1120,19 +1125,24 @@ function insertRows(db, table, rows) {
   }
 }
 var str = (v) => typeof v === "string" && v.trim() ? v.trim() : null;
-function digestSource(pending) {
+var QUEUES = {
+  "email-digest": { source: "digest", label: "the email digest" },
+  "daily-research": { source: "research", label: "daily research" }
+};
+function queueSource(kind, pending) {
+  const { source } = QUEUES[kind];
   return {
-    id: "digest",
-    label: "Hackathon Digest email",
-    priority: SOURCE_PRIORITIES.digest ?? 60,
+    id: source,
+    label: QUEUES[kind].label,
+    priority: SOURCE_PRIORITIES[source] ?? 55,
     minIntervalHours: 0,
     async fetchRecords() {
       return pending.map((s) => {
         const p = s.payload ?? {};
         const format = ["online", "in_person", "hybrid"].includes(p.format) ? p.format : "online";
         const record = {
-          source: "digest",
-          externalId: `digest-${s.id}`,
+          source,
+          externalId: `${source}-${s.id}`,
           sourceUrl: str(p.websiteUrl),
           name: String(p.name ?? ""),
           organizer: str(p.organizer),
@@ -1147,13 +1157,70 @@ function digestSource(pending) {
           state: str(p.state),
           country: str(p.country),
           countryCode: str(p.countryCode)
-          // No eligibility claim and no verified deadline: the pipeline checks the official site,
-          // and the event is published only if high school eligibility is confirmed there.
         };
         return { record, raw: p };
       });
     }
   };
+}
+var normalizeText = (t) => t.normalize("NFKC").toLowerCase().replace(/[‘’]/g, "'").replace(/[“”]/g, '"').replace(/[–—]/g, "-").replace(/\s+/g, " ").trim();
+async function applyDeadlineUpdates(db, pending, now, fetchImpl) {
+  const results = [];
+  for (const s of pending) {
+    const p = s.payload ?? {};
+    const at = str(p.submissionDeadlineAt);
+    const sourceUrl = str(p.sourceUrl);
+    const quote = str(p.quote);
+    const ev = str(p.slug) && db.prepare("SELECT id, name FROM events WHERE slug = ?").get(str(p.slug)) || identifyingHost(str(p.websiteUrl)) && db.prepare("SELECT id, name FROM events WHERE website_host = ?").get(identifyingHost(str(p.websiteUrl))) || void 0;
+    const fail = (reason) => results.push({ id: s.id, event: ev ? String(ev.name) : null, applied: false, reason });
+    if (!ev) {
+      fail("No matching event (by slug or website).");
+      continue;
+    }
+    if (!at || Number.isNaN(Date.parse(at))) {
+      fail("Missing or invalid submissionDeadlineAt.");
+      continue;
+    }
+    if (!sourceUrl || !/^https?:\/\//.test(sourceUrl)) {
+      fail("Missing sourceUrl.");
+      continue;
+    }
+    if (!quote || quote.length < 12) {
+      fail("Missing quote (needs the exact wording from the page).");
+      continue;
+    }
+    const page = await fetchPage(sourceUrl, fetchImpl);
+    const pageText = normalizeText([page.metaDescription ?? "", page.text].join(" "));
+    if (!page.ok) {
+      fail(`Couldn't load the source page (${page.error ?? "unknown error"}).`);
+      continue;
+    }
+    if (!pageText.includes(normalizeText(quote))) {
+      fail("The quote doesn't appear on the source page.");
+      continue;
+    }
+    const id = String(ev.id);
+    const upsert = db.prepare(
+      `INSERT INTO event_overrides (event_id, field, value, note, updated_at) VALUES (?, ?, ?, ?, ?)
+       ON CONFLICT (event_id, field) DO UPDATE SET value = excluded.value, note = excluded.note, updated_at = excluded.updated_at`
+    );
+    const note = `Daily research; quote verified on ${sourceUrl}: "${quote.slice(0, 300)}"`;
+    upsert.run(id, "submissionDeadlineAt", JSON.stringify(new Date(at).toISOString()), note, now.toISOString());
+    upsert.run(id, "submissionDeadlineVerified", "true", note, now.toISOString());
+    upsert.run(id, "submissionDeadlineSource", JSON.stringify(sourceUrl), note, now.toISOString());
+    materializeEvent(db, id, SOURCE_PRIORITIES, now);
+    results.push({ id: s.id, event: String(ev.name), applied: true, reason: "Quote found on the source page." });
+  }
+  return results;
+}
+function closedEventIds(db, now) {
+  const rows = db.prepare("SELECT id, submission_deadline_at, submission_deadline_status, start_at, end_at FROM events").all();
+  return rows.filter((r) => listingState({
+    submissionDeadlineAt: r.submission_deadline_at ?? null,
+    submissionDeadlineStatus: r.submission_deadline_status === "verified" ? "verified" : "unverified",
+    startAt: r.start_at ?? null,
+    endAt: r.end_at ?? null
+  }, now) === "closed").map((r) => String(r.id));
 }
 async function syncSupabase(sb, schemaSql, options = {}) {
   const now = options.now ?? /* @__PURE__ */ new Date();
@@ -1164,34 +1231,58 @@ async function syncSupabase(sb, schemaSql, options = {}) {
     sb.select("eligibility", "select=*&limit=10000"),
     sb.select("event_sources", "select=*&limit=20000"),
     sb.select("event_overrides", "select=*&limit=20000"),
-    sb.select("submissions", "select=id,payload&status=eq.pending&payload->>source=eq.email-digest&limit=500")
+    sb.select("submissions", "select=id,payload&status=eq.pending&payload->>source=in.(email-digest,daily-research,deadline-update)&limit=1000")
   ]);
   insertRows(db, "events", events.map((r) => toSqlite(r)));
   insertRows(db, "eligibility", eligibility.map((r) => toSqlite(r)));
   insertRows(db, "event_sources", sources.map((r) => toSqlite(r, ["id"])));
   insertRows(db, "event_overrides", overrides.map((r) => toSqlite(r)));
-  const report = await runIngestion(db, [hackClubSource, digestSource(pending)], {
-    force: true,
-    now,
-    fetchImpl: options.fetchImpl,
-    extraPriorities: SOURCE_PRIORITIES,
-    log: options.log
-  });
+  const kindOf = (s) => String((s.payload ?? {}).source ?? "");
+  const byKind = (k) => pending.filter((s) => kindOf(s) === k);
+  const report = await runIngestion(
+    db,
+    [hackClubSource, queueSource("email-digest", byKind("email-digest")), queueSource("daily-research", byKind("daily-research"))],
+    { force: true, now, fetchImpl: options.fetchImpl, extraPriorities: SOURCE_PRIORITIES, log: options.log }
+  );
+  const deadlines = await applyDeadlineUpdates(db, byKind("deadline-update"), now, options.fetchImpl);
+  const removed = closedEventIds(db, now);
+  for (const id of removed) {
+    for (const t of ["eligibility", "event_overrides"]) db.prepare(`DELETE FROM ${t} WHERE event_id = ?`).run(id);
+    db.prepare("DELETE FROM event_sources WHERE event_id = ?").run(id);
+    db.prepare("DELETE FROM events WHERE id = ?").run(id);
+  }
   const all = (table) => db.prepare(`SELECT * FROM ${table}`).all();
   await sb.upsert("events", all("events").map((r) => toPostgres(r)), "id");
   await sb.upsert("eligibility", all("eligibility").map((r) => toPostgres(r)), "event_id");
   await sb.upsert("event_sources", all("event_sources").map((r) => toPostgres(r, ["id"])), "source,external_id");
-  const digestProcessed = [];
-  for (const s of pending) {
-    const link = db.prepare("SELECT s.event_id, el.status FROM event_sources s LEFT JOIN eligibility el ON el.event_id = s.event_id WHERE s.source = 'digest' AND s.external_id = ?").get(`digest-${s.id}`);
-    const name = String((s.payload ?? {}).name ?? "");
-    digestProcessed.push({ id: s.id, name, eventId: link?.event_id ?? null, status: link?.status ?? null });
-    if (!link) continue;
-    await sb.update("submissions", `id=eq.${s.id}`, {
-      status: "approved",
-      event_id: link.event_id,
+  await sb.upsert("event_overrides", all("event_overrides").map((r) => toPostgres(r)), "event_id,field");
+  const existing = new Set(events.map((e) => String(e.id)));
+  const removeRemote = removed.filter((id) => existing.has(id));
+  for (let i = 0; i < removeRemote.length; i += 100) await sb.remove("events", `id=in.(${removeRemote.slice(i, i + 100).join(",")})`);
+  const queued = [];
+  for (const [kind, { source, label }] of Object.entries(QUEUES)) {
+    for (const s of byKind(kind)) {
+      const link = db.prepare("SELECT s.event_id, el.status FROM event_sources s LEFT JOIN eligibility el ON el.event_id = s.event_id WHERE s.source = ? AND s.external_id = ?").get(source, `${source}-${s.id}`);
+      const name = String((s.payload ?? {}).name ?? "");
+      queued.push({ id: s.id, kind, name, eventId: link?.event_id ?? null, status: link?.status ?? null });
+      const wasRemoved = !link && report.sources.some((r) => r.source === source && r.fetched > 0);
+      await sb.update("submissions", `id=eq.${s.id}`, link ? {
+        status: "approved",
+        event_id: link.event_id,
+        reviewed_at: now.toISOString(),
+        review_note: link.status === "verified" ? `Imported automatically from ${label}; high school eligibility confirmed on the official site.` : `Imported automatically from ${label}; eligibility is "${link.status ?? "unchecked"}", so it stays unpublished until reviewed.`
+      } : {
+        status: "rejected",
+        reviewed_at: now.toISOString(),
+        review_note: wasRemoved ? `From ${label}: not added (invalid data, or its deadline has already passed).` : `From ${label}: not added.`
+      });
+    }
+  }
+  for (const d of deadlines) {
+    await sb.update("submissions", `id=eq.${d.id}`, {
+      status: d.applied ? "approved" : "rejected",
       reviewed_at: now.toISOString(),
-      review_note: link.status === "verified" ? "Imported automatically from the email digest; high school eligibility confirmed on the official site." : `Imported automatically from the email digest; eligibility is "${link.status ?? "unchecked"}", so it stays unpublished until reviewed.`
+      review_note: `Deadline update${d.event ? ` for ${d.event}` : ""}: ${d.applied ? "applied" : "not applied"}. ${d.reason}`
     });
   }
   await sb.insert("ingestion_runs", [
@@ -1200,14 +1291,15 @@ async function syncSupabase(sb, schemaSql, options = {}) {
       started_at: now.toISOString(),
       finished_at: (/* @__PURE__ */ new Date()).toISOString(),
       status: report.sources.some((s) => s.error) ? "failed" : "succeeded",
-      stats: { report, digestProcessed },
+      stats: { report, queued, deadlines, removed: removed.length },
       error: report.sources.map((s) => s.error).filter(Boolean).join("; ") || null
     }
   ]);
   const counts = Object.fromEntries(
     ["events", "eligibility", "event_sources"].map((t) => [t, db.prepare(`SELECT COUNT(*) n FROM ${t}`).get().n])
   );
-  return { report, digestProcessed, counts };
+  const digestProcessed = queued.filter((q) => q.kind === "email-digest").map(({ kind: _k, ...rest }) => rest);
+  return { report, queued, deadlines, removed, counts, digestProcessed };
 }
 
 // src/functions/cron.ts
@@ -1235,7 +1327,9 @@ async function handler(req, res) {
       sources: result.report.sources,
       eligibility: result.report.eligibility,
       listing: result.report.listing,
-      digestProcessed: result.digestProcessed,
+      queued: result.queued,
+      deadlines: result.deadlines,
+      removed: result.removed.length,
       counts: result.counts
     });
   } catch (err) {

@@ -35,7 +35,9 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
       sources: result.report.sources,
       eligibility: result.report.eligibility,
       listing: result.report.listing,
-      digestProcessed: result.digestProcessed,
+      queued: result.queued,
+      deadlines: result.deadlines,
+      removed: result.removed.length,
       counts: result.counts,
     });
   } catch (err) {

@@ -86,6 +86,7 @@ export const SOURCE_LABELS: Record<string, string> = {
   hackclub: "Hack Club Hackathons directory",
   submission: "Organizer submission (reviewed)",
   digest: "Featured in the Hackathon Digest email",
+  research: "Found by daily research",
 };
 
 export function regionForCountry(countryCode: string | null | undefined): string | null {
