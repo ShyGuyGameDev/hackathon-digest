@@ -21,6 +21,8 @@ export function App() {
   const { saved } = useSaved();
   const [toast, setToast] = useState<string | null>(null);
   const [mock, setMock] = useState(false);
+  // Static deployments (Vercel) have no server, so submissions and admin aren't available there.
+  const [staticSite, setStaticSite] = useState(false);
   const showToast = useCallback((m: string) => setToast(m), []);
 
   useEffect(() => {
@@ -32,7 +34,10 @@ export function App() {
   useEffect(() => {
     fetch("/api/meta")
       .then((r) => r.json())
-      .then((d: { mock?: boolean }) => setMock(Boolean(d.mock)))
+      .then((d: { mock?: boolean; staticSite?: boolean }) => {
+        setMock(Boolean(d.mock));
+        setStaticSite(Boolean(d.staticSite));
+      })
       .catch(() => {});
   }, []);
 
@@ -41,6 +46,14 @@ export function App() {
 
   let page: React.ReactNode;
   if (isBrowse) page = <DiscoverPage path={path} search={search} onToast={showToast} />;
+  else if ((path === "/submit" || path === "/admin") && staticSite)
+    page = (
+      <main id="main" className="narrow">
+        <h1>{path === "/admin" ? "Admin" : "Suggest a hackathon"}</h1>
+        <p className="sub">This version of the site is a read-only snapshot, so {path === "/admin" ? "reviewing" : "online suggestions"} isn't available here yet.</p>
+        <a className="btn" href="/" onClick={(e) => onLinkClick(e, "/")}>Browse hackathons</a>
+      </main>
+    );
   else if (path === "/submit") page = <SubmitPage />;
   else if (path === "/about") page = <AboutPage />;
   else if (path === "/admin") page = <Suspense fallback={<main id="main" className="narrow">Loading…</main>}><AdminPage /></Suspense>;
@@ -65,7 +78,7 @@ export function App() {
         <nav className="nav" aria-label="Main">
           <NavLink to="/" current={isBrowse && !savedView}>Browse</NavLink>
           <NavLink to="/?saved=1" current={savedView}>Saved<span className="count num">{saved.size || ""}</span></NavLink>
-          <NavLink to="/submit" current={path === "/submit"} className="hide-sm">Suggest an event</NavLink>
+          {!staticSite && <NavLink to="/submit" current={path === "/submit"} className="hide-sm">Suggest an event</NavLink>}
           <NavLink to="/about" current={path === "/about"} className="hide-sm">How it works</NavLink>
         </nav>
       </header>
@@ -74,7 +87,7 @@ export function App() {
         <span>Hackathon Digest lists only events verified to accept high school students.</span>
         <span className="spacer" />
         <a href="/about" onClick={(e) => onLinkClick(e, "/about")}>How listings are verified</a>
-        <a href="/submit" onClick={(e) => onLinkClick(e, "/submit")}>Suggest an event</a>
+        {!staticSite && <a href="/submit" onClick={(e) => onLinkClick(e, "/submit")}>Suggest an event</a>}
       </footer>
       {toast && <div className="toast" role="status">{toast}</div>}
     </>
