@@ -1,0 +1,690 @@
+[
+  {
+    "externalId": "basis-ai-for-human-impact-2027",
+    "name": "AI for Human Impact: A Global BASIS Hackathon",
+    "organizer": "BASIS student organizing team",
+    "summary": "Build AI tools that tackle real challenges in health, education, accessibility, and sustainability.",
+    "websiteUrl": "https://basisglobalhackathon.devpost.com/",
+    "registrationUrl": "https://basisglobalhackathon.devpost.com/",
+    "rulesUrl": "https://basisglobalhackathon.devpost.com/rules",
+    "startAt": "2027-02-06T08:00:00Z",
+    "endAt": "2027-02-13T08:00:00Z",
+    "timezone": "America/Los_Angeles",
+    "submissionDeadlineAt": "2027-02-13T08:00:00Z",
+    "submissionDeadlineVerified": true,
+    "submissionDeadlineSource": "https://basisglobalhackathon.devpost.com/rules",
+    "format": "online",
+    "teamMin": 2,
+    "teamMax": 4,
+    "soloAllowed": false,
+    "categories": [
+      "ai",
+      "healthcare",
+      "education",
+      "social_impact"
+    ],
+    "eligibility": {
+      "status": "verified",
+      "highSchoolAllowed": true,
+      "educationLevels": [
+        "high_school"
+      ],
+      "minAge": null,
+      "maxAge": null,
+      "grades": [
+        9,
+        10,
+        11,
+        12
+      ],
+      "geographicRestrictions": null,
+      "internationalAllowed": null,
+      "requiresCollegeEnrollment": false,
+      "evidence": [
+        {
+          "url": "https://basisglobalhackathon.devpost.com/rules",
+          "quote": "The hackathon is open to high school students in Grades 9–12, from BASIS schools and beyond"
+        }
+      ],
+      "sourceUrl": "https://basisglobalhackathon.devpost.com/rules",
+      "checkedAt": "2026-11-19T20:00:00Z",
+      "notes": "Registration requires a school-issued email address to verify current high school enrollment."
+    }
+  },
+  {
+    "externalId": "ryze-hacks-2026",
+    "name": "Ryze Hacks 2026",
+    "organizer": "Ryze",
+    "summary": "A free, fully online student hackathon with tracks on AI in education, accessible education, and student wellbeing.",
+    "websiteUrl": "https://ryzehacks.devpost.com/",
+    "registrationUrl": "https://ryzehacks.devpost.com/",
+    "rulesUrl": "https://ryzehacks.devpost.com/rules",
+    "startAt": "2026-12-09T20:00:00Z",
+    "endAt": "2026-12-17T19:59:00Z",
+    "timezone": "Asia/Dubai",
+    "format": "online",
+    "teamMin": 1,
+    "teamMax": 4,
+    "soloAllowed": true,
+    "categories": [
+      "ai",
+      "education"
+    ],
+    "eligibility": {
+      "status": "verified",
+      "highSchoolAllowed": true,
+      "educationLevels": [
+        "high_school",
+        "undergraduate"
+      ],
+      "minAge": null,
+      "maxAge": null,
+      "grades": [],
+      "geographicRestrictions": null,
+      "internationalAllowed": null,
+      "requiresCollegeEnrollment": false,
+      "evidence": [
+        {
+          "url": "https://ryzehacks.devpost.com/rules",
+          "quote": "You must be a student on 10 December 2026."
+        },
+        {
+          "url": "https://ryzehacks.devpost.com/rules",
+          "quote": "Division prizes (opt-in): Best Junior Project (ages 13-15), Best High School Project (ages 16-18) and Best Undergraduate Project (undergraduate students)."
+        }
+      ],
+      "sourceUrl": "https://ryzehacks.devpost.com/rules",
+      "checkedAt": "2026-11-19T20:00:00Z",
+      "notes": "Official rules list the exact submission deadline as \"to be confirmed\"."
+    }
+  },
+  {
+    "externalId": "hacksaigon-innovation-sprint-2027",
+    "name": "HackSaigon: Innovation Sprint 2027",
+    "organizer": "HackSaigon",
+    "summary": "Free, virtual hackathon on Supply Chain Optimization for students aged 15–22.",
+    "theme": "Supply Chain Optimization",
+    "websiteUrl": "https://hacksaigon.org/",
+    "startAt": "2027-02-19T13:00:00Z",
+    "endAt": "2027-02-21T01:00:00Z",
+    "timezone": "Asia/Ho_Chi_Minh",
+    "submissionDeadlineAt": "2027-02-21T01:00:00Z",
+    "submissionDeadlineVerified": true,
+    "submissionDeadlineSource": "https://hacksaigon.org/",
+    "format": "online",
+    "cost": "free",
+    "eligibility": {
+      "status": "verified",
+      "highSchoolAllowed": true,
+      "educationLevels": [
+        "high_school",
+        "undergraduate"
+      ],
+      "minAge": 15,
+      "maxAge": 22,
+      "grades": [
+        10,
+        11,
+        12
+      ],
+      "geographicRestrictions": null,
+      "internationalAllowed": true,
+      "requiresCollegeEnrollment": false,
+      "evidence": [
+        {
+          "url": "https://hacksaigon.org/",
+          "quote": "Who can join? High school students (Grades 10 to 12) and undergraduate students aged 15 to 22, from any major. Students from around the world are welcome to join, as long as their country is not on Devpost’s restricted list."
+        }
+      ],
+      "sourceUrl": "https://hacksaigon.org/",
+      "checkedAt": "2026-11-19T20:00:00Z",
+      "notes": null
+    }
+  },
+  {
+    "externalId": "genhacks-open-2026",
+    "name": "GenHacks (Open Innovation Edition)",
+    "summary": "A free, fully online hackathon with healthcare & environment, robotics & IoT, and open tracks.",
+    "websiteUrl": "https://genhacks-open.devpost.com/",
+    "registrationUrl": "https://genhacks-open.devpost.com/",
+    "rulesUrl": "https://genhacks-open.devpost.com/rules",
+    "startAt": "2026-11-01T04:00:00Z",
+    "endAt": "2026-12-26T05:00:00Z",
+    "timezone": "America/New_York",
+    "submissionDeadlineAt": "2026-12-26T05:00:00Z",
+    "submissionDeadlineVerified": true,
+    "submissionDeadlineSource": "https://genhacks-open.devpost.com/rules",
+    "format": "online",
+    "categories": [
+      "healthcare",
+      "climate",
+      "robotics",
+      "hardware",
+      "ai",
+      "cybersecurity"
+    ],
+    "eligibility": {
+      "status": "verified",
+      "highSchoolAllowed": true,
+      "educationLevels": [
+        "middle_school",
+        "high_school",
+        "undergraduate",
+        "graduate"
+      ],
+      "minAge": 13,
+      "maxAge": null,
+      "grades": [],
+      "geographicRestrictions": null,
+      "internationalAllowed": true,
+      "requiresCollegeEnrollment": false,
+      "evidence": [
+        {
+          "url": "https://genhacks-open.devpost.com/rules",
+          "quote": "GenHacks is open to students age 13 and older, at any level of school. Students can join from any country or territory, except those covered by Devpost's standard exceptions."
+        }
+      ],
+      "sourceUrl": "https://genhacks-open.devpost.com/rules",
+      "checkedAt": "2026-11-19T20:00:00Z",
+      "notes": null
+    }
+  },
+  {
+    "externalId": "teens-hack-houston-2026",
+    "name": "Teens Hack Houston",
+    "websiteUrl": "https://tripleh.space/",
+    "registrationUrl": "https://tripleh.devpost.com/",
+    "rulesUrl": "https://tripleh.devpost.com/rules",
+    "startAt": "2026-11-14T12:00:00.000Z",
+    "endAt": "2026-11-21T23:00:00Z",
+    "timezone": "America/Chicago",
+    "submissionDeadlineAt": "2026-11-21T23:00:00Z",
+    "submissionDeadlineVerified": true,
+    "submissionDeadlineSource": "https://tripleh.devpost.com/rules",
+    "format": "online",
+    "teamMin": 1,
+    "teamMax": 4,
+    "soloAllowed": true,
+    "eligibility": {
+      "status": "verified",
+      "highSchoolAllowed": true,
+      "educationLevels": [
+        "high_school"
+      ],
+      "minAge": 13,
+      "maxAge": 19,
+      "grades": [],
+      "geographicRestrictions": null,
+      "internationalAllowed": null,
+      "requiresCollegeEnrollment": false,
+      "evidence": [
+        {
+          "url": "https://tripleh.devpost.com/rules",
+          "quote": "Any passionate competitor ages 13-19 can participate in the Triple H Hackathon!"
+        }
+      ],
+      "sourceUrl": "https://tripleh.devpost.com/rules",
+      "checkedAt": "2026-11-19T20:00:00Z",
+      "notes": null
+    }
+  },
+  {
+    "externalId": "united-hacks-v8",
+    "name": "United Hacks V8",
+    "organizer": "Hack United",
+    "summary": "A free 48-hour online hackathon run by high schoolers, with a secret theme revealed at the opening ceremony.",
+    "websiteUrl": "https://unitedhacks.hackunited.org/",
+    "registrationUrl": "https://unitedhacksv8.devpost.com/",
+    "rulesUrl": "https://unitedhacksv8.devpost.com/rules",
+    "startAt": "2027-01-09T00:00:00Z",
+    "endAt": "2027-01-11T01:00:00Z",
+    "timezone": "America/New_York",
+    "submissionDeadlineAt": "2027-01-10T17:00:00Z",
+    "submissionDeadlineVerified": true,
+    "submissionDeadlineSource": "https://unitedhacks.hackunited.org/",
+    "format": "online",
+    "cost": "free",
+    "teamMin": 1,
+    "teamMax": 4,
+    "soloAllowed": true,
+    "eligibility": {
+      "status": "verified",
+      "highSchoolAllowed": true,
+      "educationLevels": [
+        "anyone"
+      ],
+      "minAge": 13,
+      "maxAge": null,
+      "grades": [],
+      "geographicRestrictions": null,
+      "internationalAllowed": true,
+      "requiresCollegeEnrollment": false,
+      "evidence": [
+        {
+          "url": "https://unitedhacks.hackunited.org/",
+          "quote": "who can participate? anyone 13 or older, anywhere in the world. no prior experience required."
+        },
+        {
+          "url": "https://unitedhacksv8.devpost.com/rules",
+          "quote": "Students above 13 years of age are welcome to participate."
+        }
+      ],
+      "sourceUrl": "https://unitedhacks.hackunited.org/",
+      "checkedAt": "2026-11-19T20:00:00Z",
+      "notes": null
+    }
+  },
+  {
+    "externalId": "waicy-2026",
+    "name": "WAICY 2026 (World AI Competition for Youth)",
+    "organizer": "WAICY",
+    "summary": "A global competition where students ages 6–18 use AI to solve real-world problems through projects, art and video.",
+    "websiteUrl": "https://www.waicy.org/waicy-2026/",
+    "rulesUrl": "https://www.waicy.org/rubrics/",
+    "startAt": "2026-12-04T05:00:00Z",
+    "endAt": "2026-12-07T04:59:00Z",
+    "timezone": "America/New_York",
+    "submissionDeadlineAt": "2026-11-29T22:00:00Z",
+    "submissionDeadlineVerified": true,
+    "submissionDeadlineSource": "https://www.waicy.org/waicy-2026/",
+    "format": "online",
+    "soloAllowed": true,
+    "categories": [
+      "ai"
+    ],
+    "eligibility": {
+      "status": "verified",
+      "highSchoolAllowed": true,
+      "educationLevels": [
+        "middle_school",
+        "high_school"
+      ],
+      "minAge": 6,
+      "maxAge": 18,
+      "grades": [],
+      "geographicRestrictions": null,
+      "internationalAllowed": true,
+      "requiresCollegeEnrollment": false,
+      "evidence": [
+        {
+          "url": "https://www.waicy.org/waicy-2026/",
+          "quote": "Who Can Join Students ages 6–18 Join individually or as a team Open to participants worldwide, including remote participation"
+        }
+      ],
+      "sourceUrl": "https://www.waicy.org/waicy-2026/",
+      "checkedAt": "2026-11-19T20:00:00Z",
+      "notes": "Projects are submitted by Nov 29; the virtual competition is Dec 4–6."
+    }
+  },
+  {
+    "externalId": "checkpoint-01-games-for-good",
+    "name": "checkpoint 1 — games for good",
+    "websiteUrl": "https://checkpointhacks.org/",
+    "registrationUrl": "https://checkpoint-1.devpost.com/",
+    "rulesUrl": "https://checkpoint-1.devpost.com/rules",
+    "startAt": "2027-01-08T12:00:00.000Z",
+    "endAt": "2027-01-10T12:00:00.000Z",
+    "timezone": "Asia/Bangkok",
+    "submissionDeadlineAt": "2027-01-10T12:00:00Z",
+    "submissionDeadlineVerified": true,
+    "submissionDeadlineSource": "https://checkpoint-1.devpost.com/rules",
+    "format": "online",
+    "teamMin": 1,
+    "teamMax": 4,
+    "soloAllowed": true,
+    "categories": [
+      "games",
+      "social_impact"
+    ],
+    "eligibility": {
+      "status": "verified",
+      "highSchoolAllowed": true,
+      "educationLevels": [
+        "high_school"
+      ],
+      "minAge": 13,
+      "maxAge": 18,
+      "grades": [],
+      "geographicRestrictions": null,
+      "internationalAllowed": null,
+      "requiresCollegeEnrollment": false,
+      "evidence": [
+        {
+          "url": "https://checkpoint-1.devpost.com/rules",
+          "quote": "You can enter if you: Are aged 13 to 18 at the time of registration Have permission from a parent or guardian to take part"
+        }
+      ],
+      "sourceUrl": "https://checkpoint-1.devpost.com/rules",
+      "checkedAt": "2026-11-19T20:00:00Z",
+      "notes": null
+    }
+  },
+  {
+    "externalId": "futureforge-hacks-2026",
+    "name": "FutureForge Hacks",
+    "summary": "A one-day hackathon where students use AI to build solutions to real-world problems.",
+    "websiteUrl": "https://futureforge-hacks.devpost.com/",
+    "rulesUrl": "https://futureforge-hacks.devpost.com/rules",
+    "startAt": "2026-11-21T08:00:00Z",
+    "endAt": "2026-11-22T07:59:00Z",
+    "timezone": "America/Los_Angeles",
+    "format": "in_person",
+    "city": "Pleasanton",
+    "state": "California",
+    "country": "United States",
+    "countryCode": "US",
+    "categories": [
+      "ai"
+    ],
+    "eligibility": {
+      "status": "verified",
+      "highSchoolAllowed": true,
+      "educationLevels": [
+        "middle_school",
+        "high_school"
+      ],
+      "minAge": 13,
+      "maxAge": 18,
+      "grades": [],
+      "geographicRestrictions": null,
+      "internationalAllowed": null,
+      "requiresCollegeEnrollment": false,
+      "evidence": [
+        {
+          "url": "https://futureforge-hacks.devpost.com/",
+          "quote": "Who can participate Ages 13 to 18 only Students only All countries/territories, excluding standard exceptions"
+        },
+        {
+          "url": "https://futureforge-hacks.devpost.com/rules",
+          "quote": "Eligible participants: Students currently enrolled in middle school, high school, or college"
+        }
+      ],
+      "sourceUrl": "https://futureforge-hacks.devpost.com/",
+      "checkedAt": "2026-11-19T20:00:00Z",
+      "notes": "Official rules list registration, start time and submission deadline as TBD."
+    }
+  },
+  {
+    "externalId": "hackout-2027",
+    "name": "HackOut! 2027",
+    "organizer": "BranchOut!",
+    "summary": "A free, month-long online hackathon for high school students: Technology for Good.",
+    "websiteUrl": "https://hackout-branchout.devpost.com/",
+    "registrationUrl": "https://hackout-branchout.devpost.com/",
+    "rulesUrl": "https://hackout-branchout.devpost.com/rules",
+    "startAt": "2027-01-01T05:00:00Z",
+    "endAt": "2027-02-01T05:00:00Z",
+    "timezone": "America/New_York",
+    "submissionDeadlineAt": "2027-02-01T05:00:00Z",
+    "submissionDeadlineVerified": true,
+    "submissionDeadlineSource": "https://hackout-branchout.devpost.com/rules",
+    "format": "online",
+    "teamMin": 2,
+    "teamMax": 4,
+    "soloAllowed": false,
+    "categories": [
+      "fintech",
+      "healthcare",
+      "climate",
+      "social_impact"
+    ],
+    "eligibility": {
+      "status": "verified",
+      "highSchoolAllowed": true,
+      "educationLevels": [
+        "high_school"
+      ],
+      "minAge": 13,
+      "maxAge": 18,
+      "grades": [
+        9,
+        10,
+        11,
+        12
+      ],
+      "geographicRestrictions": null,
+      "internationalAllowed": null,
+      "requiresCollegeEnrollment": false,
+      "evidence": [
+        {
+          "url": "https://hackout-branchout.devpost.com/rules",
+          "quote": "To be eligible, a participant must: Be between 13 and 18 years old at the time of registration Be enrolled in high school, grades 9 through 12, at registration and through January 31, 2027."
+        }
+      ],
+      "sourceUrl": "https://hackout-branchout.devpost.com/rules",
+      "checkedAt": "2026-11-19T20:00:00Z",
+      "notes": null
+    }
+  },
+  {
+    "externalId": "we-connect-the-dots-hackathon-2026",
+    "name": "We Connect The Dots Hack-A-Thon 2026",
+    "organizer": "We Connect The Dots",
+    "summary": "A 100% virtual, mentor-supported hackathon for ages 13–18: build a portfolio-ready project with AI in the loop.",
+    "websiteUrl": "https://www.we-connect-the-dots.org/hack-a-thon-ages-13-18",
+    "startAt": "2026-12-04T21:30:00Z",
+    "endAt": "2026-12-14T04:59:00Z",
+    "timezone": "America/New_York",
+    "format": "online",
+    "cost": "free",
+    "teamMin": 4,
+    "teamMax": 4,
+    "categories": [
+      "social_impact",
+      "ai"
+    ],
+    "eligibility": {
+      "status": "verified",
+      "highSchoolAllowed": true,
+      "educationLevels": [
+        "high_school"
+      ],
+      "minAge": 13,
+      "maxAge": 18,
+      "grades": [],
+      "geographicRestrictions": null,
+      "internationalAllowed": null,
+      "requiresCollegeEnrollment": false,
+      "evidence": [
+        {
+          "url": "https://www.we-connect-the-dots.org/hack-a-thon-ages-13-18",
+          "quote": "A 100% virtual hackathon for ages 13–18. Build a real, portfolio-ready project with AI in the loop, learn from industry mentors, and turn code into change — completely free."
+        }
+      ],
+      "sourceUrl": "https://www.we-connect-the-dots.org/hack-a-thon-ages-13-18",
+      "checkedAt": "2026-11-19T20:00:00Z",
+      "notes": "Kickoff Dec 4; build weekends Dec 4–6 and Dec 11–13 (EST). The page doesn't state a submission deadline."
+    }
+  },
+  {
+    "externalId": "lec-hacks-2026",
+    "name": "LEC Hacks 2026",
+    "organizer": "Lynbrook High School Engineering Club",
+    "summary": "A 36-hour online hackathon for high school students, run over Discord.",
+    "websiteUrl": "https://lec-hacks.bss.design/",
+    "startAt": "2026-11-20T05:00:00Z",
+    "endAt": "2026-11-21T17:00:00Z",
+    "timezone": "America/Los_Angeles",
+    "submissionDeadlineAt": "2026-11-21T17:00:00Z",
+    "submissionDeadlineVerified": true,
+    "submissionDeadlineSource": "https://lec-hacks.bss.design/",
+    "format": "online",
+    "teamMin": 1,
+    "teamMax": 4,
+    "soloAllowed": true,
+    "prizeSummary": "$58,647 in prizes",
+    "categories": [
+      "web",
+      "mobile",
+      "hardware",
+      "ai"
+    ],
+    "eligibility": {
+      "status": "verified",
+      "highSchoolAllowed": true,
+      "educationLevels": [
+        "high_school"
+      ],
+      "minAge": null,
+      "maxAge": null,
+      "grades": [],
+      "geographicRestrictions": null,
+      "internationalAllowed": null,
+      "requiresCollegeEnrollment": false,
+      "evidence": [
+        {
+          "url": "https://lec-hacks.bss.design/",
+          "quote": "Online Hackathon for High School Students"
+        }
+      ],
+      "sourceUrl": "https://lec-hacks.bss.design/",
+      "checkedAt": "2026-11-19T20:00:00Z",
+      "notes": null
+    }
+  },
+  {
+    "externalId": "global-virtual-hackathon-2026",
+    "name": "Global Virtual Hackathon 2026",
+    "organizer": "Canadian International School, Singapore",
+    "summary": "A free online hackathon with a sealed challenge revealed Nov 19: build it, then defend it on camera.",
+    "websiteUrl": "https://gvhackathon.com/",
+    "startAt": "2026-11-19T12:00:00Z",
+    "endAt": "2026-11-26T11:59:00Z",
+    "timezone": "Etc/GMT+12",
+    "submissionDeadlineAt": "2026-11-26T11:59:00Z",
+    "submissionDeadlineVerified": true,
+    "submissionDeadlineSource": "https://gvhackathon.com/",
+    "format": "online",
+    "cost": "free",
+    "teamMin": 2,
+    "teamMax": 4,
+    "soloAllowed": false,
+    "eligibility": {
+      "status": "verified",
+      "highSchoolAllowed": true,
+      "educationLevels": [
+        "high_school"
+      ],
+      "minAge": 14,
+      "maxAge": 18,
+      "grades": [],
+      "geographicRestrictions": null,
+      "internationalAllowed": true,
+      "requiresCollegeEnrollment": false,
+      "evidence": [
+        {
+          "url": "https://gvhackathon.com/",
+          "quote": "Who can enter? Students aged 14 to 18 at any school worldwide, in teams of 2 to 4."
+        }
+      ],
+      "sourceUrl": "https://gvhackathon.com/",
+      "checkedAt": "2026-11-19T20:00:00Z",
+      "notes": null
+    }
+  },
+  {
+    "externalId": "cosmo-hacks-2026",
+    "name": "Cosmo Hacks",
+    "websiteUrl": "https://www.cosmohacks.com/",
+    "registrationUrl": "https://cosmohacks.devpost.com/",
+    "startAt": "2026-12-19T16:00:00Z",
+    "endAt": "2027-01-18T22:00:00Z",
+    "timezone": "America/Chicago",
+    "submissionDeadlineAt": "2027-01-18T22:00:00Z",
+    "submissionDeadlineVerified": true,
+    "submissionDeadlineSource": "https://www.cosmohacks.com/",
+    "format": "online",
+    "teamMin": 1,
+    "teamMax": 4,
+    "soloAllowed": true,
+    "eligibility": {
+      "status": "verified",
+      "highSchoolAllowed": true,
+      "educationLevels": [
+        "middle_school",
+        "high_school",
+        "undergraduate",
+        "graduate"
+      ],
+      "minAge": 13,
+      "maxAge": null,
+      "grades": [],
+      "geographicRestrictions": null,
+      "internationalAllowed": null,
+      "requiresCollegeEnrollment": false,
+      "evidence": [
+        {
+          "url": "https://www.cosmohacks.com/",
+          "quote": "MIDDLE & HIGH SCHOOL Ages 13–18 For students in middle or high school."
+        }
+      ],
+      "sourceUrl": "https://www.cosmohacks.com/",
+      "checkedAt": "2026-11-19T20:00:00Z",
+      "notes": "Middle/high school and college students are judged in separate divisions."
+    }
+  },
+  {
+    "externalId": "build-for-earth-2026",
+    "name": "Build for Earth",
+    "organizer": "FirstCommit",
+    "websiteUrl": "https://earth.firstcommit.xyz/",
+    "startAt": "2026-11-08T12:00:00Z",
+    "endAt": "2027-01-16T12:00:00Z",
+    "format": "online",
+    "theme": "Connected Earth"
+  },
+  {
+    "externalId": "nasa-space-apps-2026",
+    "name": "NASA Space Apps Challenge 2026",
+    "organizer": "NASA",
+    "websiteUrl": "https://www.spaceappschallenge.org/2026/",
+    "startAt": "2026-11-14T12:00:00Z",
+    "endAt": "2026-11-15T23:59:00Z",
+    "format": "hybrid"
+  },
+  {
+    "externalId": "redshifted-cortex-2026",
+    "name": "Redshifted Cortex",
+    "organizer": "Redshifted",
+    "websiteUrl": "https://cortex.redshifted.ca/",
+    "startAt": "2026-11-07T14:00:00Z",
+    "endAt": "2026-11-08T00:00:00Z",
+    "format": "hybrid",
+    "city": "Ottawa",
+    "state": "Ontario",
+    "country": "Canada",
+    "countryCode": "CA"
+  },
+  {
+    "externalId": "high-school-io-2026",
+    "name": "High School I/O 2026",
+    "organizer": "OHI/O, The Ohio State University",
+    "websiteUrl": "https://hack.osu.edu/hs/2026",
+    "startAt": "2026-11-15T14:00:00Z",
+    "endAt": "2026-11-16T00:30:00Z",
+    "format": "hybrid",
+    "city": "Columbus",
+    "state": "Ohio",
+    "country": "United States",
+    "countryCode": "US"
+  },
+  {
+    "externalId": "icehacks-2026",
+    "name": "IceHacks 2026",
+    "organizer": "CodeStarters",
+    "websiteUrl": "https://icehacks.codestarters.org/",
+    "registrationUrl": "https://icehacks.devpost.com/",
+    "startAt": "2026-11-08T08:00:00Z",
+    "endAt": "2026-11-16T02:00:00Z",
+    "format": "online"
+  },
+  {
+    "externalId": "veritas-ai-hs-hackathon-2026",
+    "name": "Veritas AI International High School Hackathon 2026",
+    "organizer": "Veritas AI",
+    "websiteUrl": "https://highschoolhackathon.org/",
+    "startAt": "2026-11-14T05:00:00Z",
+    "endAt": "2026-11-16T04:59:00Z",
+    "format": "online"
+  }
+]

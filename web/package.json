@@ -1,0 +1,33 @@
+{
+  "name": "hackathon-digest-web",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Discovery site for verified high-school-eligible hackathons. Independent of the weekly email routine.",
+  "engines": {
+    "node": ">=22.18"
+  },
+  "scripts": {
+    "dev": "node --run dev:server & node --run dev:client",
+    "dev:server": "node --env-file-if-exists=.env --watch src/server/index.ts",
+    "dev:client": "vite",
+    "build": "tsc --noEmit && vite build",
+    "start": "NODE_ENV=production node --env-file-if-exists=.env src/server/index.ts",
+    "ingest": "node --env-file-if-exists=.env src/ingest/run.ts",
+    "seed:mock": "node scripts/seed-mock.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test --test-reporter=spec \"tests/**/*.test.ts\""
+  },
+  "dependencies": {
+    "react": "19.1.0",
+    "react-dom": "19.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "22.15.21",
+    "@types/react": "19.1.6",
+    "@types/react-dom": "19.1.5",
+    "@vitejs/plugin-react": "4.5.0",
+    "typescript": "5.8.3",
+    "vite": "6.3.5"
+  }
+}

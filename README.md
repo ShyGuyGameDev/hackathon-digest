@@ -19,3 +19,6 @@ Hackathon digest log for automated email routine (sent weekly on Tuesdays)
 
 ### Known limitation
 The Claude GitHub App for this repo is authorization-only (shows under GitHub's "Authorized GitHub Apps", not "Installed GitHub Apps") — there is no install/configure step available to grant it repo write access, so cloud routine runs cannot push commits. Dedup was moved to Gmail sent-history search to route around this entirely.
+
+## Website (separate product, not part of the email routine)
+`web/` contains a hackathon discovery website. Everything above this heading is the email routine's spec, and nothing in `web/` changes it: the routine's recipient, schedule, Gmail deduplication and online-or-Bay-Area location requirement all stay exactly as written above. The website's worldwide scope applies to the website only. See `web/README.md`.
