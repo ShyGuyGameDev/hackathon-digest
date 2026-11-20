@@ -25,7 +25,11 @@ export function DeadlinePill({ e, now }: { e: EventSummary; now: Date }) {
   );
 }
 
+/** Which date the left column shows; follows the sort order (see DATE_COLUMN in DiscoverPage). */
+export type DateColumn = "start" | "end" | "listed";
+
 interface Props {
+  dateColumn: DateColumn;
   event: EventSummary;
   now: Date;
   selected: boolean;
@@ -34,8 +38,12 @@ interface Props {
   onToggleSave: (id: string) => void;
 }
 
-export const EventRow = memo(function EventRow({ event: e, now, selected, saved, href, onToggleSave }: Props) {
-  const badge = dateBadge(e.startAt, e.timezone);
+export const EventRow = memo(function EventRow({ event: e, dateColumn, now, selected, saved, href, onToggleSave }: Props) {
+  // "Listed" is when we first saw the event, so it's shown in the viewer's zone rather than the event's.
+  const badge =
+    dateColumn === "listed"
+      ? dateBadge(e.firstSeenAt, null)
+      : dateBadge(dateColumn === "end" ? (e.endAt ?? e.startAt) : e.startAt, e.timezone);
   const place = placeLabel(e);
   const tags = e.categories.slice(0, 2).map((c) => labelFor(CATEGORIES, c));
   const where = [FORMAT_LABEL[e.format], place].filter(Boolean).join(" · ");

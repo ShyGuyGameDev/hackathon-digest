@@ -9,11 +9,19 @@ import { fetchEvents } from "../lib/api.ts";
 import { navigate, onLinkClick, useDocumentTitle } from "../lib/router.ts";
 import { useRecent, useSaved } from "../lib/storage.ts";
 import { DetailPanel } from "./DetailPanel.tsx";
-import { EventRow } from "./EventRow.tsx";
+import { EventRow, type DateColumn } from "./EventRow.tsx";
 import { FilterPanel, countryName } from "./FilterPanel.tsx";
 import { FilterIcon, SearchIcon, XIcon } from "./Icons.tsx";
 
 const PAGE = 50;
+
+// The left column shows the date that matters for the current sort.
+const DATE_COLUMN: Record<Sort, { field: DateColumn; label: string }> = {
+  start: { field: "start", label: "Starts" },
+  deadline: { field: "end", label: "Ends" },
+  name: { field: "end", label: "Ends" },
+  newest: { field: "listed", label: "Listed" },
+};
 
 function useNow(intervalMs = 60_000): Date {
   const [now, setNow] = useState(() => new Date());
@@ -256,11 +264,12 @@ export function DiscoverPage({ path, search, onToast }: { path: string; search: 
             )}
             {results.length > 0 && (
               <div className="list-head" aria-hidden="true">
-                <span>Starts</span><span>Hackathon</span><span className="h-where">Format and location</span><span style={{ textAlign: "right" }}>Submissions</span>
+                <span>{DATE_COLUMN[filters.sort].label}</span><span>Hackathon</span><span className="h-where">Format and location</span><span style={{ textAlign: "right" }}>Submissions</span>
               </div>
             )}
             {results.slice(0, limit).map((e) => (
               <EventRow
+                dateColumn={DATE_COLUMN[filters.sort].field}
                 key={e.id}
                 event={e}
                 now={now}
