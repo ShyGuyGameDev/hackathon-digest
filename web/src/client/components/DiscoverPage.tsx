@@ -23,6 +23,17 @@ const DATE_COLUMN: Record<Sort, { field: DateColumn; label: string }> = {
   newest: { field: "listed", label: "Listed" },
 };
 
+function useLockBodyScroll(active: boolean) {
+  useEffect(() => {
+    if (!active || !window.matchMedia("(max-width: 900px)").matches) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [active]);
+}
+
 function useNow(intervalMs = 60_000): Date {
   const [now, setNow] = useState(() => new Date());
   useEffect(() => {
@@ -142,6 +153,9 @@ export function DiscoverPage({ path, search, onToast }: { path: string; search: 
     return () => io.disconnect();
   }, [results.length > limit]);
 
+  // Phones: stop the page behind the filter sheet or detail sheet from scrolling.
+  useLockBodyScroll(sheetOpen || Boolean(slug));
+
   const closeDetail = useCallback(() => navigate(`/${query}`), [query]);
   const panel = (
     <FilterPanel filters={filters} setFilters={setFilters} facets={facets} available={available} events={events} />
@@ -193,22 +207,22 @@ export function DiscoverPage({ path, search, onToast }: { path: string; search: 
 
         <section aria-label="Results">
           <div className="toolbar">
-            <button type="button" className="btn small mobile-only" onClick={() => setSheetOpen(true)}>
-              <FilterIcon /> Filters{filterCount ? ` (${filterCount})` : ""}
-            </button>
             <p className="result-count" aria-live="polite">
               {data ? <>{results.length} {results.length === 1 ? "hackathon" : "hackathons"}</> : " "}
             </p>
             <span className="spacer" />
             <label className="sort">
-              Sort
-              <select className="select" value={filters.sort} onChange={(e) => setFilters({ sort: e.target.value as Sort })}>
+              <span className="sort-label">Sort</span>
+              <select aria-label="Sort by" className="select" value={filters.sort} onChange={(e) => setFilters({ sort: e.target.value as Sort })}>
                 <option value="start">Start date</option>
                 <option value="deadline">Deadline</option>
                 <option value="newest">Newly listed</option>
                 <option value="name">Name</option>
               </select>
             </label>
+            <button type="button" className="btn small mobile-only filters-btn" onClick={() => setSheetOpen(true)} aria-haspopup="dialog">
+              <FilterIcon /> Filters{filterCount ? <span className="filters-count num">{filterCount}</span> : null}
+            </button>
           </div>
 
           {chips.length > 0 && (
@@ -315,6 +329,7 @@ export function DiscoverPage({ path, search, onToast }: { path: string; search: 
         <>
           <div className="sheet-backdrop" onClick={() => setSheetOpen(false)} />
           <div className="sheet" role="dialog" aria-modal="true" aria-label="Filters" onKeyDown={(e) => e.key === "Escape" && setSheetOpen(false)}>
+            <div className="sheet-grabber" aria-hidden="true" />
             <div className="sheet-head">
               <h2>Filters</h2>
               <button type="button" className="icon-btn" onClick={() => setSheetOpen(false)} aria-label="Close filters"><XIcon /></button>

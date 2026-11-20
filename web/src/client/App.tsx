@@ -6,6 +6,7 @@ import { adminAvailable } from "./lib/api.ts";
 import { supabaseEnabled } from "./lib/supabase.ts";
 import { onLinkClick, useLocation } from "./lib/router.ts";
 import { useSaved } from "./lib/storage.ts";
+import { InfoIcon, ListIcon, PlusIcon, StarIcon } from "./components/Icons.tsx";
 
 // Reviewers only: kept out of the public bundle.
 const AdminPage = lazy(() => import("./components/AdminPage.tsx").then((m) => ({ default: m.AdminPage })));
@@ -96,6 +97,17 @@ export function App() {
         <a href="/about" onClick={(e) => onLinkClick(e, "/about")}>How listings are verified</a>
         {(supabaseEnabled || !staticSite) && <a href="/submit" onClick={(e) => onLinkClick(e, "/submit")}>Suggest an event</a>}
       </footer>
+      {/* Phones get app-style tabs; the header nav is hidden there (see .tabbar in styles.css). */}
+      <nav className="tabbar" aria-label="Main">
+        <NavLink to="/" current={isBrowse && !savedView}><ListIcon size={20} /><span>Browse</span></NavLink>
+        <NavLink to="/?saved=1" current={savedView}>
+          <StarIcon size={20} filled={savedView} />
+          <span>Saved</span>
+          {saved.size > 0 && <span className="tab-badge num" aria-label={`${saved.size} saved`}>{saved.size}</span>}
+        </NavLink>
+        {(supabaseEnabled || !staticSite) && <NavLink to="/submit" current={path === "/submit"}><PlusIcon size={20} /><span>Suggest</span></NavLink>}
+        <NavLink to="/about" current={path === "/about"}><InfoIcon size={20} /><span>About</span></NavLink>
+      </nav>
       {toast && <div className="toast" role="status">{toast}</div>}
     </>
   );

@@ -18,4 +18,8 @@ export const ChevronIcon = ({ open, ...p }: P & { open?: boolean }) => (
   <S {...p}><path d={open ? "m4 10 4-4 4 4" : "m4 6 4 4 4-4"} /></S>
 );
 export const CheckIcon = (p: P) => <S {...p}><path d="m3.5 8.5 3 3 6-7" /></S>;
+export const ListIcon = (p: P) => <S {...p}><path d="M5.5 4h8M5.5 8h8M5.5 12h8M2.5 4h0M2.5 8h0M2.5 12h0" /></S>;
+export const PlusIcon = (p: P) => <S {...p}><path d="M8 3v10M3 8h10" /></S>;
+export const InfoIcon = (p: P) => <S {...p}><circle cx="8" cy="8" r="5.5" /><path d="M8 7.5V11M8 5h0" /></S>;
+export const BackIcon = (p: P) => <S {...p}><path d="M10 3.5 5.5 8l4.5 4.5" /></S>;
 export const AlertIcon = (p: P) => <S {...p}><circle cx="8" cy="8" r="5.5" /><path d="M8 5v3.5M8 11h0" /></S>;

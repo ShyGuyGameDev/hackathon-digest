@@ -6,7 +6,7 @@ import { ApiError, fetchEvent } from "../lib/api.ts";
 import { buildIcs, downloadFile } from "../lib/ics.ts";
 import { rememberViewed } from "../lib/storage.ts";
 import { DeadlinePill, FORMAT_LABEL, placeLabel } from "./EventRow.tsx";
-import { CalendarIcon, CheckIcon, ExternalIcon, LinkIcon, StarIcon, XIcon, AlertIcon } from "./Icons.tsx";
+import { AlertIcon, BackIcon, CalendarIcon, CheckIcon, ExternalIcon, LinkIcon, StarIcon, XIcon } from "./Icons.tsx";
 
 interface Props {
   slug: string;
@@ -100,7 +100,8 @@ export function DetailPanel({ slug, preview, now, saved, onToggleSave, onClose, 
   return (
     <aside className="panel" aria-label="Hackathon details">
       <div className="panel-top">
-        <button type="button" className="icon-btn" onClick={onClose} aria-label="Close details" title="Close (Esc)"><XIcon /></button>
+        <button type="button" className="icon-btn desktop-close" onClick={onClose} aria-label="Close details" title="Close (Esc)"><XIcon /></button>
+        <button type="button" className="back-btn" onClick={onClose}><BackIcon size={18} /> Back</button>
         <span className="spacer" />
         {e && (
           <>
@@ -153,6 +154,17 @@ export function DetailPanel({ slug, preview, now, saved, onToggleSave, onClose, 
           </article>
         )}
       </div>
+      {e && registerUrl && state !== "closed" && (
+        // Phones: the main action stays within thumb reach while scrolling the details.
+        <div className="panel-actions">
+          <a className="btn primary" href={registerUrl} target="_blank" rel="noopener noreferrer">
+            {detail?.registrationUrl ? "Register" : "Visit official site"} <ExternalIcon />
+          </a>
+          <button type="button" className="btn icon-only" aria-pressed={saved} onClick={() => onToggleSave(e.id)} aria-label={saved ? "Remove from saved" : "Save"}>
+            <StarIcon filled={saved} />
+          </button>
+        </div>
+      )}
     </aside>
   );
 }
